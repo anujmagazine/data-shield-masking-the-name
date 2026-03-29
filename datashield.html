@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataShield — Mask Athlete Data Before Using AI</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- PDF.js for reading PDFs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<!-- jsPDF for generating PDFs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Tesseract.js for OCR — Web Workers work fine on localhost -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.1/tesseract.min.js"></script>
+
+<style>
+:root{
+  --bg:#f1f5f9;--card:#fff;--primary:#0f172a;--sec:#64748b;--muted:#94a3b8;
+  --accent:#059669;--accent2:#047857;--accentL:#d1fae5;--accentBg:#ecfdf5;
+  --border:#e2e8f0;--hiY:#fef9c3;--hiBorder:#eab308;
+  --maskBg:#dbeafe;--maskBorder:#3b82f6;--danger:#ef4444;
+  --r:14px;--rs:8px;
+  --sh:0 1px 3px rgba(0,0,0,.06);--shM:0 4px 6px -1px rgba(0,0,0,.07);
+  --f:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--f);background:var(--bg);color:var(--primary);min-height:100vh;line-height:1.6;-webkit-font-smoothing:antialiased}
+.ctr{max-width:820px;margin:0 auto;padding:24px 20px 80px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-i{width:46px;height:46px;background:linear-gradient(135deg,#059669,#0d9488);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;box-shadow:0 2px 10px rgba(5,150,105,.3)}
+.logo h1{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.logo p{font-size:12px;color:var(--sec);font-weight:500;margin-top:-2px}
+.badge{display:flex;align-items:center;gap:6px;background:var(--accentBg);border:1.5px solid var(--accent);color:var(--accent);padding:8px 14px;border-radius:50px;font-size:13px;font-weight:700;animation:glow 3s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,.15)}50%{box-shadow:0 0 0 6px rgba(5,150,105,.08)}}
+
+/* Steps bar */
+.steps{display:flex;gap:4px;margin-bottom:28px;padding:6px;background:var(--card);border-radius:16px;box-shadow:var(--sh)}
+.sp{flex:1;text-align:center;padding:10px 8px;border-radius:12px;font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;transition:.3s}
+.sp.on{background:var(--primary);color:#fff;box-shadow:var(--shM)}
+.sp.ok{color:var(--accent)}
+.sn{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--border);color:var(--muted);flex-shrink:0}
+.sp.on .sn{background:rgba(255,255,255,.2);color:#fff}
+.sp.ok .sn{background:var(--accentL);color:var(--accent)}
+
+/* Card */
+.card{background:var(--card);border-radius:var(--r);padding:28px;box-shadow:var(--shM);animation:up .3s ease-out}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ct{font-size:18px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+.cs{font-size:14px;color:var(--sec);margin-bottom:24px}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:20px}
+.tab{flex:1;padding:12px;border:2px solid var(--border);background:#fff;border-radius:var(--rs);font-family:var(--f);font-size:14px;font-weight:600;color:var(--sec);cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.tab:hover{border-color:var(--muted);color:var(--primary)}
+.tab.on{border-color:var(--accent);background:var(--accentBg);color:var(--accent)}
+.tab svg{width:18px;height:18px}
+
+/* Panels */
+.pnl{display:none}.pnl.on{display:block;animation:up .25s ease-out}
+textarea{width:100%;min-height:200px;padding:16px;border:2px solid var(--border);border-radius:var(--rs);font-family:var(--f);font-size:14px;line-height:1.7;color:var(--primary);resize:vertical;background:#fafbfc;transition:.2s}
+textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+textarea::placeholder{color:var(--muted)}
+
+/* Drop zones */
+.dz{border:2px dashed var(--border);border-radius:var(--rs);padding:44px 24px;text-align:center;cursor:pointer;transition:.2s;background:#fafbfc}
+.dz:hover,.dz.over{border-color:var(--accent);background:var(--accentBg)}
+.dz-icon{font-size:36px;margin-bottom:10px}
+.dz-t{font-size:15px;font-weight:600;margin-bottom:4px}
+.dz-h{font-size:13px;color:var(--muted)}
+
+/* File info & progress */
+.finfo{display:none;margin-top:14px;padding:12px 16px;background:var(--accentBg);border-radius:var(--rs);font-size:13px;font-weight:600;color:var(--accent);align-items:center;gap:10px}
+.finfo.on{display:flex}
+.finfo .x{margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;font-weight:700}
+.prog{display:none;margin-top:14px}.prog.on{display:block}
+.prog-track{width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),#0d9488);border-radius:3px;transition:width .3s;width:0}
+.prog-lbl{font-size:13px;color:var(--sec);margin-top:8px;font-weight:500}
+
+/* Buttons */
+.btn{padding:12px 24px;border:none;border-radius:var(--rs);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:8px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn1{background:var(--primary);color:#fff}.btn1:hover:not(:disabled){background:#1e293b;transform:translateY(-1px)}
+.btn2{background:var(--accent);color:#fff}.btn2:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}
+.btn3{background:#fff;color:var(--primary);border:2px solid var(--border)}.btn3:hover:not(:disabled){border-color:var(--primary)}
+.br{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}.br-r{justify-content:flex-end}
+
+/* Step 2 */
+.ebox{padding:16px;background:#fafbfc;border:2px solid var(--border);border-radius:var(--rs);font-size:14px;line-height:1.8;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.nhl{background:var(--hiY);border-bottom:2px solid var(--hiBorder);padding:1px 4px;border-radius:3px;font-weight:600}
+.nsec{margin-top:20px;padding:16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--rs)}
+.nsec-t{font-size:14px;font-weight:700;margin-bottom:12px;color:#92400e;display:flex;align-items:center;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1.5px solid #fde68a;border-radius:50px;font-size:13px;font-weight:600;margin:0 6px 8px 0}
+.chip .rm{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;font-weight:800}
+.arow{display:flex;gap:8px;margin-top:12px}
+.arow input{flex:1;padding:8px 12px;border:2px solid var(--border);border-radius:var(--rs);font-family:var(--f);font-size:13px}
+.arow input:focus{outline:none;border-color:var(--accent)}
+.arow button{padding:8px 16px;background:var(--accentBg);color:var(--accent);border:1.5px solid var(--accent);border-radius:var(--rs);font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer}
+
+/* Step 3 */
+.alr{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#fafbfc;border:1.5px solid var(--border);border-radius:var(--rs);margin-bottom:10px}
+.al-orig{font-size:14px;font-weight:700;min-width:140px;color:var(--danger);text-decoration:line-through;text-decoration-thickness:2px}
+.al-arr{font-size:18px;color:var(--muted);flex-shrink:0}
+.al-in{flex:1;padding:10px 14px;border:2px solid var(--accent);border-radius:var(--rs);font-family:var(--f);font-size:14px;font-weight:600;color:var(--accent);background:var(--accentBg)}
+.al-in:focus{outline:none;box-shadow:0 0 0 3px rgba(5,150,105,.15)}
+
+/* Step 4 */
+.obox{padding:16px;background:#f0fdf9;border:2px solid #a7f3d0;border-radius:var(--rs);font-size:14px;line-height:1.8;max-height:350px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.mname{background:var(--maskBg);border-bottom:2px solid var(--maskBorder);padding:1px 4px;border-radius:3px;font-weight:700;color:#1d4ed8}
+.mtbl{margin-top:16px;width:100%;border-collapse:collapse;font-size:13px}
+.mtbl th{text-align:left;padding:10px 14px;background:var(--border);font-weight:700;color:var(--sec)}
+.mtbl th:first-child{border-radius:8px 0 0 8px}.mtbl th:last-child{border-radius:0 8px 8px 0}
+.mtbl td{padding:10px 14px;border-bottom:1px solid var(--border)}
+.mtbl .o{color:var(--danger);font-weight:600}.mtbl .a{color:#1d4ed8;font-weight:700}
+.sbanner{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--accentBg);border:1.5px solid var(--accent);border-radius:var(--rs);margin-bottom:20px;font-size:14px;font-weight:600;color:var(--accent)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);padding:12px 24px;background:var(--primary);color:#fff;border-radius:50px;font-size:14px;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,.1);opacity:0;transition:.3s;z-index:100}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.hide{display:none!important}
+@media(max-width:600px){.ctr{padding:16px 14px 48px}.card{padding:20px 16px}.sp>span:not(.sn){display:none}.alr{flex-direction:column;align-items:stretch}.al-orig{min-width:unset}.tabs{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="ctr">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-i">🛡</div>
+      <div><h1>DataShield</h1><p>Mask athlete data before using AI</p></div>
+    </div>
+    <div class="badge">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      100% Local — No Data Leaves This Device
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps">
+    <div class="sp on" id="sp1"><span class="sn">1</span><span>Upload</span></div>
+    <div class="sp" id="sp2"><span class="sn">2</span><span>Detect</span></div>
+    <div class="sp" id="sp3"><span class="sn">3</span><span>Rename</span></div>
+    <div class="sp" id="sp4"><span class="sn">4</span><span>Output</span></div>
+  </div>
+
+  <!-- ═══ STEP 1 ═══ -->
+  <div class="card" id="s1">
+    <div class="ct">Upload your document</div>
+    <div class="cs">Paste text, scan a photo of handwritten notes, or upload a medical PDF</div>
+
+    <div class="tabs">
+      <button class="tab on" onclick="setTab('text')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Paste Text</button>
+      <button class="tab" onclick="setTab('image')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>Scan Image</button>
+      <button class="tab" onclick="setTab('pdf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Upload PDF</button>
+    </div>
+
+    <!-- TEXT -->
+    <div class="pnl on" id="p-text">
+      <textarea id="inp-text" placeholder="Paste medical notes, nutrition plans, or any athlete document here...&#10;&#10;Example:&#10;Patient: Saina Nehwal&#10;Date: 15 March 2026&#10;Chief Complaint: Right knee inflammation.&#10;Diet log reviewed by Dr. Anand Mehta..."></textarea>
+    </div>
+
+    <!-- IMAGE -->
+    <div class="pnl" id="p-image">
+      <div class="dz" id="dz-img" onclick="document.getElementById('f-img').click()">
+        <div class="dz-icon">📷</div>
+        <div class="dz-t">Drop a photo or click to upload</div>
+        <div class="dz-h">JPG, PNG — handwritten notes, prescriptions, reports</div>
+      </div>
+      <input type="file" id="f-img" accept="image/*" style="display:none" onchange="onImg(this)">
+      <div class="finfo" id="fi-img"><span>📎</span><span id="fi-img-n"></span><button class="x" onclick="rmImg()">✕</button></div>
+      <div class="prog" id="pr-img"><div class="prog-track"><div class="prog-fill" id="pf-img"></div></div><div class="prog-lbl" id="pl-img">Starting OCR...</div></div>
+    </div>
+
+    <!-- PDF -->
+    <div class="pnl" id="p-pdf">
+      <div class="dz" id="dz-pdf" onclick="document.getElementById('f-pdf').click()">
+        <div class="dz-icon">📄</div>
+        <div class="dz-t">Drop a PDF or click to upload</div>
+        <div class="dz-h">Medical reports, nutrition plans, lab results</div>
+      </div>
+      <input type="file" id="f-pdf" accept=".pdf" style="display:none" onchange="onPdf(this)">
+      <div class="finfo" id="fi-pdf"><span>📎</span><span id="fi-pdf-n"></span><button class="x" onclick="rmPdf()">✕</button></div>
+      <div class="prog" id="pr-pdf"><div class="prog-track"><div class="prog-fill" id="pf-pdf"></div></div><div class="prog-lbl" id="pl-pdf">Reading PDF...</div></div>
+    </div>
+
+    <div class="br br-r"><button class="btn btn1" onclick="toStep2()">Extract & Detect Names →</button></div>
+  </div>
+
+  <!-- ═══ STEP 2 ═══ -->
+  <div class="card hide" id="s2">
+    <div class="ct">Review detected names</div>
+    <div class="cs">We found these person names. Remove false matches or add missed ones.</div>
+    <div class="ebox" id="htxt"></div>
+    <div class="nsec">
+      <div class="nsec-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Detected Person Names</div>
+      <div id="chips"></div>
+      <div class="arow"><input type="text" id="mname" placeholder="Add a name manually..."><button onclick="addN()">+ Add</button></div>
+    </div>
+    <div class="br br-r"><button class="btn btn3" onclick="nav(1)">← Back</button><button class="btn btn1" onclick="toStep3()">Assign Aliases →</button></div>
+  </div>
+
+  <!-- ═══ STEP 3 ═══ -->
+  <div class="card hide" id="s3">
+    <div class="ct">What should we call them?</div>
+    <div class="cs">Give each person an alias. The original name will never appear in the output.</div>
+    <div id="arows"></div>
+    <div class="br br-r"><button class="btn btn3" onclick="nav(2)">← Back</button><button class="btn btn2" onclick="toStep4()">🛡 Apply Masking</button></div>
+  </div>
+
+  <!-- ═══ STEP 4 ═══ -->
+  <div class="card hide" id="s4">
+    <div class="sbanner"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>All names masked — safe to paste into any AI tool.</div>
+    <div class="ct" style="font-size:15px;margin-bottom:12px">Masked Document</div>
+    <div class="obox" id="otxt"></div>
+    <table class="mtbl"><thead><tr><th>Original Name</th><th>Masked As</th></tr></thead><tbody id="mbody"></tbody></table>
+    <div class="br">
+      <button class="btn btn2" onclick="cpTxt()">📋 Copy Text</button>
+      <button class="btn btn1" onclick="dlTxt()">⬇ Download TXT</button>
+      <button class="btn btn1" onclick="dlPdf()">⬇ Download PDF</button>
+      <button class="btn btn3" onclick="reset()">↻ Start Over</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════ */
+let D = { tab:'text', raw:'', txt:'', names:[], alias:{}, masked:'' };
+
+/* ══════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════ */
+function setTab(t){
+  D.tab=t;
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',['text','image','pdf'][i]===t));
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+t).classList.add('on');
+}
+
+/* ══════════════════════════════════════════
+   DRAG & DROP SETUP
+   ══════════════════════════════════════════ */
+function setupDZ(id,handler){
+  const el=document.getElementById(id);
+  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});
+  el.addEventListener('dragleave',()=>el.classList.remove('over'));
+  el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');if(e.dataTransfer.files[0])handler(e.dataTransfer.files[0])});
+}
+setupDZ('dz-img',processImage);
+setupDZ('dz-pdf',processPdf);
+
+/* ══════════════════════════════════════════
+   IMAGE / OCR (Tesseract.js — runs locally)
+   ══════════════════════════════════════════ */
+function onImg(input){if(input.files[0])processImage(input.files[0])}
+
+async function processImage(file){
+  // Show file info
+  document.getElementById('fi-img-n').textContent=file.name;
+  document.getElementById('fi-img').classList.add('on');
+  document.getElementById('pr-img').classList.add('on');
+  const pf=document.getElementById('pf-img');
+  const pl=document.getElementById('pl-img');
+
+  // Check if Web Workers are available BEFORE calling Tesseract
+  // (Workers are blocked in sandboxed environments like Claude artifacts)
+  let canUseWorkers=false;
+  try{
+    const b=new Blob(['self.close()'],{type:'application/javascript'});
+    const u=URL.createObjectURL(b);
+    const w=new Worker(u);
+    w.terminate();URL.revokeObjectURL(u);
+    canUseWorkers=true;
+  }catch(e){canUseWorkers=false}
+
+  if(!canUseWorkers){
+    pf.style.width='100%';
+    pl.textContent='⚠ Image OCR requires localhost. Run: python3 -m http.server 8000';
+    pl.style.color='#b45309';
+    msg('Image scanning works when you run DataShield locally — see README');
+    return;
+  }
+
+  pf.style.width='5%'; pl.textContent='Loading OCR engine...';
+
+  try{
+    const result = await Tesseract.recognize(file, 'eng', {
+      logger: m => {
+        if(m.status==='loading tesseract core'){pf.style.width='10%';pl.textContent='Loading OCR core...'}
+        else if(m.status==='loading language traineddata'){pf.style.width='20%';pl.textContent='Downloading language data...'}
+        else if(m.status==='initializing api'){pf.style.width='30%';pl.textContent='Initializing OCR...'}
+        else if(m.status==='recognizing text'){
+          const pct=Math.round(m.progress*100);
+          pf.style.width=(30+pct*0.65)+'%';
+          pl.textContent='Reading text... '+pct+'%';
+        }
+      }
+    });
+
+    D.txt=result.data.text.trim();
+    pf.style.width='100%';
+
+    if(D.txt.length>5){
+      pl.textContent='✓ Extracted '+D.txt.length+' characters — all processed on your device';
+    }else{
+      pl.textContent='⚠ Very little text found. Try a clearer, higher-contrast image.';
+    }
+  }catch(err){
+    console.error('OCR Error:',err);
+    pf.style.width='0';
+    pl.textContent='⚠ OCR failed: '+err.message;
+  }
+}
+
+function rmImg(){
+  D.txt='';
+  document.getElementById('fi-img').classList.remove('on');
+  document.getElementById('pr-img').classList.remove('on');
+  document.getElementById('f-img').value='';
+}
+
+/* ══════════════════════════════════════════
+   PDF READING (pdf.js)
+   ══════════════════════════════════════════ */
+function onPdf(input){if(input.files[0])processPdf(input.files[0])}
+
+async function processPdf(file){
+  document.getElementById('fi-pdf-n').textContent=file.name;
+  document.getElementById('fi-pdf').classList.add('on');
+  document.getElementById('pr-pdf').classList.add('on');
+  const pf=document.getElementById('pf-pdf');
+  const pl=document.getElementById('pl-pdf');
+
+  const buf=await file.arrayBuffer();
+
+  try{
+    const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    let txt='';
+    for(let i=1;i<=pdf.numPages;i++){
+      pf.style.width=Math.round(i/pdf.numPages*90)+'%';
+      pl.textContent='Page '+i+' of '+pdf.numPages+'...';
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      txt+=content.items.map(x=>x.str).join(' ')+'\n\n';
+    }
+    D.txt=txt.trim();
+    pf.style.width='100%';
+    pl.textContent='✓ Extracted '+D.txt.length+' characters from '+pdf.numPages+' page(s)';
+  }catch(err){
+    console.error('PDF Error:',err);
+    pl.textContent='⚠ Could not read PDF: '+err.message;
+  }
+}
+
+function rmPdf(){
+  D.txt='';
+  document.getElementById('fi-pdf').classList.remove('on');
+  document.getElementById('pr-pdf').classList.remove('on');
+  document.getElementById('f-pdf').value='';
+}
+
+/* ══════════════════════════════════════════
+   NAME DETECTION v2 — Precision Engine
+   ══════════════════════════════════════════ */
+function detectNames(text){
+  const found=new Set();
+
+  // Words that are NEVER part of a person's name
+  const BAD=new Set('normal,elevated,low,high,total,serum,blood,fasting,complete,acute,chronic,mild,moderate,severe,positive,negative,pending,cleared,optimal,adequate,inadequate,suboptimal,borderline,haemoglobin,haematocrit,platelet,reticulocyte,transferrin,ferritin,creatine,creatinine,kinase,cortisol,testosterone,cholesterol,triglycerides,glucose,urea,calcium,magnesium,iron,vitamin,protein,casein,whey,omega,isolate,monohydrate,glycinate,hemoglobin,hematocrit,right,left,upper,lower,posterior,anterior,lateral,medial,deltoid,infraspinatus,scapular,rotator,cuff,spinal,cord,knee,shoulder,ankle,hip,limb,muscle,tendon,clinical,therapeutic,diagnostic,examination,assessment,monitoring,physiotherapy,rehabilitation,recovery,treatment,medication,prescription,supplementation,hydration,nutrition,compliance,exemption,clearance,doping,prohibited,anti,sports,sport,para,olympic,gold,quest,national,authority,medical,team,unit,records,staff,coaching,training,competition,strength,conditioning,session,active,rest,weekly,daily,monthly,annual,pre,post,match,simulation,distribution,summary,notes,note,report,date,signed,prepared,reviewed,reported,prescribed,section,reference,range,result,parameter,status,target,current,page,period,phase,action,items,findings,progress,next,follow,monday,tuesday,wednesday,thursday,friday,saturday,sunday,january,february,march,april,may,june,july,august,september,october,november,december,morning,afternoon,evening,chief,complaint,presenting,history,physical,body,mass,weight,height,fat,composition,intake,load,ratio,heart,rate,pressure,sugar,count,studies,panel,use,science,medicine,diet,plan,meal,log,key,new,old,raw,net,set,full,light,heavy,safe,good,best,first,last,only,other,same'.split(','));
+
+  function ok(w){
+    if(w.length<3)return false;
+    if(BAD.has(w.toLowerCase()))return false;
+    if(!/^[A-Z]/.test(w))return false;
+    if(/(?:tion|ment|ness|ance|ence|ical|ology|istry|osis|itis|emia|uria|gram|cyte|lysis|scopy|pathy|plasty|ectomy)$/.test(w.toLowerCase()))return false;
+    return true;
+  }
+
+  // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X"
+  const labeled=[
+    /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
+    /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist)\s*:\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
+    /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
+    /(?:Signed|Prepared by|Reported by|Reviewed by)\s*:?\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
+  ];
+  labeled.forEach(re=>{let m;while((m=re.exec(text))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
+
+  // 2) Context: "with X", "X reported", "X's knee"
+  const ctx=[
+    /(?:with|briefed|advised|counselled|partner|against|sparring)\s+(?:Dr\.?\s+)?([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})/g,
+    /([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})\s+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised)/g,
+    /([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})(?:'s|'s)\s/g,
+  ];
+  ctx.forEach(re=>{let m;while((m=re.exec(text))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
+
+  // 3) Repeated capitalized pairs (2+ occurrences)
+  let m;const re2=/\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b/g;
+  while((m=re2.exec(text))!==null){
+    const c=m[1].trim();if(!c.split(/\s+/).every(ok))continue;
+    if((text.match(new RegExp(c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length>=2)found.add(c);
+  }
+
+  // Remove substring names
+  const arr=Array.from(found);
+  return arr.filter(n=>!arr.some(o=>o!==n&&o.includes(n)&&o.length>n.length));
+}
+
+/* ══════════════════════════════════════════
+   STEP NAVIGATION
+   ══════════════════════════════════════════ */
+function nav(n){
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('s'+i).classList.toggle('hide',i!==n);
+    const p=document.getElementById('sp'+i);
+    p.classList.remove('on','ok');
+    if(i<n)p.classList.add('ok');
+    if(i===n)p.classList.add('on');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toStep2(){
+  if(D.tab==='text') D.txt=document.getElementById('inp-text').value.trim();
+  // image & pdf already set D.txt during processing
+  if(!D.txt){msg('Please provide some text first');return}
+  D.raw=D.txt;
+  D.names=detectNames(D.txt);
+  renderS2(); nav(2);
+}
+
+function renderS2(){
+  let h=esc(D.txt);
+  [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
+    h=h.replace(new RegExp(esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="nhl">'+esc(n)+'</span>');
+  });
+  document.getElementById('htxt').innerHTML=h;
+  const c=document.getElementById('chips');
+  if(!D.names.length){c.innerHTML='<div style="font-size:13px;color:#92400e">No names detected. Add them manually below.</div>';return}
+  c.innerHTML=D.names.map((n,i)=>'<span class="chip">'+esc(n)+'<button class="rm" onclick="rmN('+i+')">✕</button></span>').join('');
+}
+
+function rmN(i){D.names.splice(i,1);renderS2()}
+function addN(){const el=document.getElementById('mname'),v=el.value.trim();if(v&&!D.names.includes(v)){D.names.push(v);el.value='';renderS2()}}
+document.getElementById('mname').addEventListener('keydown',e=>{if(e.key==='Enter')addN()});
+
+function toStep3(){
+  if(!D.names.length){msg('Add at least one name');return}
+  D.names.forEach((n,i)=>{if(!D.alias[n])D.alias[n]='Person '+String.fromCharCode(65+i)});
+  document.getElementById('arows').innerHTML=D.names.map(n=>{
+    const s=n.replace(/'/g,"\\'");
+    return '<div class="alr"><div class="al-orig">'+esc(n)+'</div><div class="al-arr">→</div><input class="al-in" value="'+esc(D.alias[n]||'')+'" oninput="D.alias[\''+s+'\']=this.value" placeholder="Alias..."></div>';
+  }).join('');
+  nav(3);
+}
+
+function toStep4(){
+  for(const n of D.names)if(!D.alias[n]||!D.alias[n].trim()){msg('Give every name an alias');return}
+  let masked=D.raw;
+  [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
+    masked=masked.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),D.alias[n]);
+  });
+  D.masked=masked;
+  let h=esc(D.masked);
+  [...D.names].sort((a,b)=>(D.alias[b]||'').length-(D.alias[a]||'').length).forEach(n=>{
+    const a=D.alias[n];if(!a)return;
+    h=h.replace(new RegExp(esc(a).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="mname">'+esc(a)+'</span>');
+  });
+  document.getElementById('otxt').innerHTML=h;
+  document.getElementById('mbody').innerHTML=D.names.map(n=>'<tr><td class="o">'+esc(n)+'</td><td class="a">'+esc(D.alias[n])+'</td></tr>').join('');
+  nav(4);
+}
+
+/* ══════════════════════════════════════════
+   DOWNLOADS — Simple & Reliable
+   ══════════════════════════════════════════ */
+function triggerDL(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},300);
+}
+
+function cpTxt(){
+  const ta=document.createElement('textarea');
+  ta.value=D.masked;ta.style.cssText='position:fixed;left:-9999px';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');msg('✓ Copied — safe to paste into any AI tool')}catch(e){
+    navigator.clipboard.writeText(D.masked).then(()=>msg('✓ Copied')).catch(()=>msg('Copy failed'));
+  }
+  document.body.removeChild(ta);
+}
+
+function dlTxt(){
+  triggerDL(new Blob([D.masked],{type:'text/plain;charset=utf-8'}),'masked_document.txt');
+  msg('✓ TXT downloaded');
+}
+
+function dlPdf(){
+  try{
+    const{jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+
+    // Header
+    doc.setFont('helvetica');doc.setFontSize(8);doc.setTextColor(100);
+    doc.text('MASKED DOCUMENT — Generated by DataShield (100% Local Processing)',15,12);
+    doc.setDrawColor(200);doc.line(15,14,195,14);
+
+    // Body
+    doc.setFontSize(11);doc.setTextColor(30);
+    const lines=doc.splitTextToSize(D.masked,175);
+    let y=22;
+    for(const l of lines){if(y>275){doc.addPage();y=20}doc.text(l,15,y);y+=6}
+
+    // Mapping reference page
+    doc.addPage();
+    doc.setFontSize(14);doc.setTextColor(30);doc.setFont('helvetica','bold');
+    doc.text('Name Mapping Reference',15,20);
+    doc.setFontSize(9);doc.setTextColor(100);doc.setFont('helvetica','normal');
+    doc.text('KEEP THIS PAGE SEPARATE — Do not share with AI tools.',15,28);
+
+    y=40;doc.setFontSize(10);doc.setTextColor(30);doc.setFont('helvetica','bold');
+    doc.text('Original Name',15,y);doc.text('Masked As',110,y);
+    y+=3;doc.setDrawColor(180);doc.line(15,y,195,y);y+=8;
+
+    doc.setFont('helvetica','normal');
+    D.names.forEach(n=>{
+      doc.setTextColor(200,50,50);doc.text(n,15,y);
+      doc.setTextColor(30,80,200);doc.text(D.alias[n]||'',110,y);
+      y+=8;
+    });
+
+    triggerDL(doc.output('blob'),'masked_document.pdf');
+    msg('✓ PDF downloaded — includes mapping reference page');
+  }catch(e){console.error(e);msg('PDF failed — use Download TXT')}
+}
+
+function reset(){
+  D={tab:'text',raw:'',txt:'',names:[],alias:{},masked:''};
+  document.getElementById('inp-text').value='';
+  rmImg();rmPdf();setTab('text');nav(1);
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════════ */
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function msg(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000)}
+</script>
+</body>
+</html>
