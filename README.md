@@ -2,7 +2,7 @@
 
 **Mask athlete names in medical documents before using AI tools. 100% local. No data leaves your device.**
 
-DataShield is a privacy-first Progressive Web App built for sports nutrition teams, para sports science units, and anyone handling sensitive athlete medical data. It lets you replace real names with aliases before pasting documents into ChatGPT, Claude, Gemini, or any other AI tool — so you get AI-powered insights without exposing athlete identity.
+DataShield is a privacy-first web app built for sports nutrition teams, para sports science units, and anyone handling sensitive athlete medical data. It lets you replace real names with aliases before pasting documents into ChatGPT, Claude, Gemini, or any other AI tool — so you get AI-powered insights without exposing athlete identity.
 
 Built by [AI&Beyond](https://aiandbeyond.ai) for the [Olympic Gold Quest (OGQ)](https://www.olympicgoldquest.in/) Para Sports Science and Nutrition teams.
 
@@ -10,43 +10,37 @@ Built by [AI&Beyond](https://aiandbeyond.ai) for the [Olympic Gold Quest (OGQ)](
 
 ## The Problem
 
-Sports science and nutrition teams generate sensitive documents daily — blood reports, diet logs, injury notes, training load data. AI tools like ChatGPT and Claude can analyse these brilliantly, but teams can't use them because:
+Sports science and nutrition teams generate sensitive documents daily — blood reports, diet logs, injury notes, training load data. AI tools can analyse these brilliantly, but teams hesitate because:
 
 - Athlete medical data is confidential
 - NADA/WADA compliance requires strict data handling
-- Uploading a document with "Neeraj Chopra" or "Sumit Antil" to any cloud AI tool is a privacy violation
+- Uploading a document with a real athlete name to any cloud AI tool is a privacy violation
 
 **DataShield removes this barrier.** Replace names before the document ever touches an AI tool. Get the insights. Protect the athlete.
 
 ---
 
 ## How It Works
+
 ```
-Upload Document → Detect Names → Assign Aliases → Get Masked Output
+Upload Document → Detect Names → Assign Aliases → Download Masked Output
 ```
 
-### Step 1: Upload
-Paste text, upload a photo of handwritten notes, or upload a medical PDF.
-
-### Step 2: Detect
-DataShield automatically finds person names in the document. You can remove false matches or add missed names manually.
-
-### Step 3: Rename
-Assign aliases — "Athlete A", "Person B", or whatever you choose. The original name will never appear in the output.
-
-### Step 4: Output
-Download the masked document as TXT or PDF. Or copy the text directly and paste it into any AI tool. The PDF includes a separate mapping reference page (keep this page private).
+1. **Upload** — paste text, upload a photo of handwritten notes, or upload a medical PDF
+2. **Detect** — DataShield automatically finds person names. Remove false matches or add missed names manually
+3. **Rename** — assign aliases (Athlete A, Person B, or anything you choose)
+4. **Output** — copy the masked text or download as TXT or PDF. Safe to paste into any AI tool
 
 ---
 
 ## Features
 
-| Feature | How It Works |
-|---------|-------------|
+| Feature | Details |
+|---------|---------|
 | **Paste Text** | Copy-paste any medical notes, nutrition plans, or reports |
-| **Scan Image** | Upload a JPG/PNG of handwritten notes → OCR extracts text automatically |
+| **Scan Image** | Upload JPG/PNG of handwritten notes → OCR extracts text automatically |
 | **Upload PDF** | Upload medical PDFs, blood reports, lab results → text extracted automatically |
-| **Smart Name Detection** | Finds names after labels (Athlete:, Dr., Coach:), in context ("briefed Sandeep"), and repeated capitalized pairs — while rejecting 200+ medical/sports terms |
+| **Smart Name Detection** | Finds names after labels (Athlete:, Dr., Coach:) and rejects 200+ medical/sports terms |
 | **Copy to Clipboard** | One click → paste directly into ChatGPT, Claude, Gemini |
 | **Download TXT** | Plain text file with all names replaced |
 | **Download PDF** | Formatted PDF with masked content + separate mapping reference page |
@@ -56,108 +50,223 @@ Download the masked document as TXT or PDF. Or copy the text directly and paste 
 ## Privacy & Security
 
 - **100% local processing** — no server, no database, no API calls
-- **OCR runs in-browser** via [Tesseract.js](https://tesseract.projectnaptha.com/) — your images never leave the device
-- **PDF reading** via [Mozilla pdf.js](https://mozilla.github.io/pdf.js/) — no cloud processing
+- **OCR runs in-browser** via Tesseract.js — your images never leave the device
+- **PDF reading** via Mozilla pdf.js — no cloud processing
 - **No accounts, no logins, no tracking, no ads**
 - **Works offline** after first load (libraries cache in browser)
 - **Open source** — inspect every line of code
 
 ---
 
-## Quick Start (Run Locally)
+## Running DataShield Locally
 
-### Prerequisites
-- Any modern browser (Chrome recommended)
-- Python 3.x (pre-installed on Mac, [download for Windows](https://www.python.org/downloads/))
-
-### Setup (10 seconds)
-```bash
-# 1. Clone this repository
-git clone https://github.com/YOUR_USERNAME/datashield.git
-
-# 2. Navigate to the folder
-cd datashield
-
-# 3. Start local server
-python3 -m http.server 8000
-
-# 4. Open Chrome
-# Go to http://localhost:8000
-```
-
-That's it. DataShield is running on your machine.
-
-### Alternative: No Git Required
-
-1. Click the green **Code** button above → **Download ZIP**
-2. Unzip the folder
-3. Open Terminal / Command Prompt
-4. `cd` into the unzipped folder
-5. Run `python3 -m http.server 8000`
-6. Open `http://localhost:8000` in Chrome
+DataShield is a single HTML file. To use all features including image OCR, you need to serve it via a local web server. Follow the steps below for your operating system.
 
 ---
 
-## Show on Your Phone (Same WiFi)
+### Step 1 — Get the Files
 
-1. Make sure your phone and laptop are on the same WiFi network
-2. Find your laptop's IP address:
-   - **Mac:** `ifconfig | grep 192`
-   - **Windows:** `ipconfig`
-3. On your phone's browser, go to: `http://YOUR_LAPTOP_IP:8000`
-4. Example: `http://192.168.1.42:8000`
+**Option A: Download ZIP (recommended, no Git needed)**
 
-The full app runs on your phone, served from your laptop. Still 100% local.
+1. Click the green **Code** button at the top of this page
+2. Click **Download ZIP**
+3. Open your Downloads folder
+4. Right-click the ZIP file and select **Extract All** (Windows) or double-click (Mac)
+5. You now have a folder called `datashield` containing `index.html`
+
+**Option B: Clone with Git**
+
+```bash
+git clone https://github.com/YOUR_USERNAME/datashield.git
+```
+
+---
+
+### Step 2 — Install Python (one-time setup)
+
+DataShield uses Python's built-in web server. You only need to do this once.
+
+#### On Mac
+
+Mac comes with Python pre-installed. Open Terminal and check:
+
+```bash
+python3 --version
+```
+
+If you see a version number, skip to Step 3. If not, download Python from [python.org/downloads](https://python.org/downloads) and run the installer.
+
+#### On Windows
+
+1. Open Command Prompt — press `Windows key + R`, type `cmd`, press Enter
+2. Type the following and press Enter:
+
+```
+python3 --version
+```
+
+3. If you see a version number (e.g. `Python 3.11.2`), Python is already installed. Skip to Step 3.
+
+4. If you see **"Python was not found"**, you need to install it:
+   - Go to [python.org/downloads](https://python.org/downloads) in Chrome
+   - Click the big yellow **Download Python** button
+   - Open the downloaded `.exe` file
+   - ⚠️ **On the first screen of the installer, tick the checkbox that says "Add Python to PATH"** — this is at the bottom of the screen. If you skip this, the commands below will not work.
+   - Click **Install Now**
+   - Wait for the installation to finish, then click **Close**
+   - Close Command Prompt and open it again (important — old windows do not pick up the new installation)
+
+5. Verify the installation worked:
+
+```
+python --version
+```
+
+You should now see a version number.
+
+---
+
+### Step 3 — Start the Server
+
+Open Terminal (Mac) or Command Prompt (Windows).
+
+Navigate to the datashield folder using the `cd` command.
+
+**On Mac:**
+```bash
+cd Downloads/datashield
+```
+
+**On Windows (adjust the path to match where you unzipped the folder):**
+```
+cd C:\Users\YourName\Downloads\datashield
+```
+
+Now start the server:
+
+**On Mac:**
+```bash
+python3 -m http.server 8000
+```
+
+**On Windows — try this first:**
+```
+python3 -m http.server 8000
+```
+
+**On Windows — if the above gives an error, try this instead:**
+```
+python -m http.server 8000
+```
+
+You will see a message like `Serving HTTP on 0.0.0.0 port 8000`. Leave this Terminal or Command Prompt window open while you use the app.
+
+---
+
+### Step 4 — Open in Chrome
+
+Open Chrome and go to:
+
+```
+http://localhost:8000
+```
+
+DataShield is now running fully on your laptop. All three features work — paste text, image OCR, and PDF upload.
+
+---
+
+### Step 5 — Stop the Server When Done
+
+Go back to the Terminal or Command Prompt window and press:
+
+```
+Ctrl + C
+```
+
+---
+
+## Show on Your Phone During a Demo
+
+You can open DataShield on your phone while it is running on your laptop, without any internet connection. Both devices must be on the same WiFi network.
+
+**Find your laptop's local IP address:**
+
+On Mac — open Terminal and run:
+```bash
+ifconfig | grep 192
+```
+
+On Windows — open Command Prompt and run:
+```
+ipconfig
+```
+Look for the line that says **IPv4 Address**. It will look something like `192.168.1.42`.
+
+**On your phone:**
+
+Open Chrome and go to `http://192.168.1.42:8000` (replace with your actual IP address).
+
+The full app runs on your phone, served from your laptop. Still 100% local — no internet required.
 
 ---
 
 ## Deploy to GitHub Pages (Free, Permanent URL)
 
-If you want a shareable link that anyone can access:
+If you want a shareable link that anyone can open without running a server:
 
-1. Push this repo to GitHub
-2. Go to **Settings → Pages**
-3. Under **Branch**, select `main` → click **Save**
-4. Wait ~60 seconds
-5. Your app is live at: `https://YOUR_USERNAME.github.io/datashield/`
+1. Push this repo to GitHub (must be a public repository)
+2. Go to **Settings → Pages** in the left sidebar
+3. Under **Branch**, select `main` and click **Save**
+4. Wait about 60 seconds
+5. Your app is live at `https://YOUR_USERNAME.github.io/datashield/`
 
-**Important:** Even on GitHub Pages, all processing happens in the visitor's browser. GitHub only hosts the code — no athlete data ever reaches GitHub's servers.
+**Is athlete data safe even though the code is on GitHub?**
+
+Yes. GitHub only hosts the code — the HTML, CSS, and JavaScript. Think of it like a vending machine that hands you a sealed notebook. The vending machine knows what the notebook looks like, but has no idea what you write inside it. Everything users do inside the app — documents uploaded, names entered, masked output — is processed entirely inside their browser. Nothing is sent to GitHub or anywhere else.
 
 ---
 
-## What About the Code Being Public on GitHub?
+## What Works Where
 
-GitHub hosts the **app's code** — the HTML, CSS, and JavaScript. Think of it like a vending machine that hands you a sealed notebook. The vending machine knows what the notebook looks like, but it has no idea what you write inside it.
+| Feature | Double-click index.html | Localhost server | GitHub Pages |
+|---------|------------------------|------------------|--------------|
+| Paste Text → full flow | ✅ | ✅ | ✅ |
+| Upload PDF → full flow | ✅ | ✅ | ✅ |
+| Download TXT | ✅ | ✅ | ✅ |
+| Download PDF | ✅ | ✅ | ✅ |
+| Copy to clipboard | ✅ | ✅ | ✅ |
+| Image OCR (handwritten notes) | ❌ | ✅ | ✅ |
 
-Everything the user does — the PDFs they upload, the names they type, the aliases they choose, the masked output — is processed by JavaScript running inside their browser. No server receives it. No data is logged. No API is called.
-
-If you prefer the code to be private, GitHub Pages works with private repositories on the free plan.
+Image OCR requires a server because the OCR engine (Tesseract.js) uses Web Workers, which browsers only allow when a page is served over HTTP — not when opened directly as a file.
 
 ---
 
 ## Technical Details
 
 ### Architecture
+
 DataShield is a single HTML file with zero backend dependencies. Everything runs client-side:
 
-- **OCR Engine:** [Tesseract.js v5.1.1](https://github.com/naptha/tesseract.js) — offline text recognition from images
-- **PDF Reader:** [Mozilla pdf.js v3.11.174](https://github.com/nicolo-ribaudo/pdfjs-dist) — client-side PDF text extraction
-- **PDF Generator:** [jsPDF v2.5.1](https://github.com/parallax/jsPDF) — creates downloadable masked PDFs
-- **Styling:** Custom CSS with [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) typography
+- **OCR Engine:** Tesseract.js v5.1.1 — offline text recognition from images
+- **PDF Reader:** Mozilla pdf.js v3.11.174 — client-side PDF text extraction
+- **PDF Generator:** jsPDF v2.5.1 — creates downloadable masked PDFs
+- **Font:** Plus Jakarta Sans via Google Fonts
 
 ### Name Detection Engine
-The name detection uses a three-tier strategy:
 
-1. **Labeled names (highest confidence):** Finds names after explicit labels like `Athlete:`, `Coach:`, `Dr.`, `Signed:`
-2. **Contextual names (medium confidence):** Detects names in action context like "Neeraj reported" or "briefed Sandeep"
-3. **Repeated capitalized pairs (lower confidence):** Two-word capitalized phrases appearing 2+ times in the document
+The detection uses a three-tier strategy:
 
-Every candidate is checked against a 200+ term exclusion set covering lab parameters (Haemoglobin, Platelet Count), anatomy (Right Knee, Posterior Deltoid), medical procedures (Therapeutic Use Exemption), sports terms (Para Athletics, Training Load), and document vocabulary (Action Items, Follow Up).
+1. **Labeled names (high confidence):** Names after `Athlete:`, `Coach:`, `Dr.`, `Signed:`, `Reviewed by:`
+2. **Contextual names (medium confidence):** Names in action context — "Neeraj reported", "briefed Sandeep", "partner Tarun Dhillon"
+3. **Repeated capitalized pairs (lower confidence):** Two-word capitalized phrases appearing 2 or more times in the document
+
+Every candidate is checked against a 200+ term exclusion list covering lab parameters, anatomy, medical procedures, sports science terms, and document vocabulary — so terms like "Normal Haematocrit", "Right Knee", "Therapeutic Use Exemption", and "Training Load" are never flagged as names.
 
 ### File Structure
+
 ```
 datashield/
-├── index.html    # Complete application (single file)
+├── index.html    # Complete application — single file, no dependencies
 └── README.md     # This file
 ```
 
@@ -165,39 +274,28 @@ datashield/
 
 ## Use Cases
 
-- **Sports Nutritionists:** Mask athlete names in diet logs, meal plans, and supplement trackers before asking AI to analyse nutrition gaps
-- **Sports Scientists:** Anonymise blood reports, training load data, and recovery monitoring before using AI for pattern detection
-- **Physiotherapists:** Remove athlete identities from injury notes and rehab protocols before getting AI-assisted treatment suggestions
-- **Team Doctors:** Sanitise medical records before using AI for differential diagnosis support
-- **Coaches:** Anonymise performance data before using AI for tactical analysis
-- **Any organisation handling confidential data:** HR records, legal documents, financial reports
+- **Sports Nutritionists** — mask athlete names in diet logs and supplement trackers before asking AI to analyse nutrition gaps
+- **Sports Scientists** — anonymise blood reports and training load data before using AI for pattern detection
+- **Physiotherapists** — remove athlete identity from injury notes before getting AI-assisted treatment suggestions
+- **Team Doctors** — sanitise medical records before using AI for analysis
+- **Coaches** — anonymise performance data before AI tactical analysis
+- **Any team handling confidential data** — HR records, legal documents, financial reports
 
 ---
 
-## Roadmap
+## The Idea Behind This
 
-- [ ] Automatic OCR for scanned PDFs (image-based PDFs)
-- [ ] Batch processing — mask multiple documents at once
-- [ ] Custom exclusion lists for domain-specific vocabulary
-- [ ] Service Worker for full offline PWA support
-- [ ] Installable app icon (manifest.json)
-- [ ] Hindi/regional language OCR support
+This app was built using [Claude](https://claude.ai) by Anthropic as part of an AI literacy demonstration for enterprise teams. It demonstrates a principle we teach at [AI&Beyond](https://aiandbeyond.ai):
 
----
+> *AI tools become safe to use once you remove the barrier — and the barrier is almost always about data, not capability.*
 
-## Built With
-
-This app was built using [Claude](https://claude.ai) by Anthropic as part of an AI literacy demonstration for enterprise teams. It demonstrates a core principle we teach at [AI&Beyond](https://aiandbeyond.ai):
-
-> **AI tools become safe to use once you remove the barrier — and the barrier is almost always about data, not capability.**
-
-DataShield exists because a sports science team wanted to use AI but couldn't risk athlete privacy. The solution wasn't to avoid AI — it was to make the data safe first.
+DataShield exists because a sports science team wanted to use AI but could not risk athlete privacy. The solution was not to avoid AI. It was to make the data safe first.
 
 ---
 
 ## About AI&Beyond
 
-[AI&Beyond](https://aiandbeyond.ai) is an enterprise AI literacy and training company that delivers customized AI bootcamps to organisations across industries. We help teams move from "AI is interesting" to "AI is how we work" — safely, practically, and measurably.
+[AI&Beyond](https://aiandbeyond.ai) is an enterprise AI literacy and training company delivering customised AI bootcamps across industries. Co-founded by Jaspreet Bindra and Anuj Magazine.
 
 ---
 
@@ -209,7 +307,7 @@ MIT License — free to use, modify, and distribute.
 
 ## Contributing
 
-Found a bug? Have a feature idea? Open an issue or submit a PR. Contributions welcome.
+Found a bug or have a feature idea? Open an issue or submit a pull request. Contributions welcome.
 
 ---
 
