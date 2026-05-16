@@ -372,42 +372,62 @@ function rmPdf(){
 function detectNames(text){
   const found=new Set();
 
-  // Words that are NEVER part of a person's name
-  const BAD=new Set('normal,elevated,low,high,total,serum,blood,fasting,complete,acute,chronic,mild,moderate,severe,positive,negative,pending,cleared,optimal,adequate,inadequate,suboptimal,borderline,haemoglobin,haematocrit,platelet,reticulocyte,transferrin,ferritin,creatine,creatinine,kinase,cortisol,testosterone,cholesterol,triglycerides,glucose,urea,calcium,magnesium,iron,vitamin,protein,casein,whey,omega,isolate,monohydrate,glycinate,hemoglobin,hematocrit,right,left,upper,lower,posterior,anterior,lateral,medial,deltoid,infraspinatus,scapular,rotator,cuff,spinal,cord,knee,shoulder,ankle,hip,limb,muscle,tendon,clinical,therapeutic,diagnostic,examination,assessment,monitoring,physiotherapy,rehabilitation,recovery,treatment,medication,prescription,supplementation,hydration,nutrition,compliance,exemption,clearance,doping,prohibited,anti,sports,sport,para,olympic,gold,quest,national,authority,medical,team,unit,records,staff,coaching,training,competition,strength,conditioning,session,active,rest,weekly,daily,monthly,annual,pre,post,match,simulation,distribution,summary,notes,note,report,date,signed,prepared,reviewed,reported,prescribed,section,reference,range,result,parameter,status,target,current,page,period,phase,action,items,findings,progress,next,follow,monday,tuesday,wednesday,thursday,friday,saturday,sunday,january,february,march,april,may,june,july,august,september,october,november,december,morning,afternoon,evening,chief,complaint,presenting,history,physical,body,mass,weight,height,fat,composition,intake,load,ratio,heart,rate,pressure,sugar,count,studies,panel,use,science,medicine,diet,plan,meal,log,key,new,old,raw,net,set,full,light,heavy,safe,good,best,first,last,only,other,same'.split(','));
+  const BAD=new Set('normal,elevated,low,high,total,serum,blood,fasting,complete,acute,chronic,mild,moderate,severe,positive,negative,pending,cleared,optimal,adequate,inadequate,suboptimal,borderline,haemoglobin,haematocrit,platelet,reticulocyte,transferrin,ferritin,creatine,creatinine,kinase,cortisol,testosterone,cholesterol,triglycerides,glucose,urea,calcium,magnesium,iron,vitamin,protein,casein,whey,omega,isolate,monohydrate,glycinate,hemoglobin,hematocrit,right,left,upper,lower,posterior,anterior,lateral,medial,deltoid,infraspinatus,scapular,rotator,cuff,spinal,cord,knee,shoulder,ankle,hip,limb,muscle,tendon,clinical,therapeutic,diagnostic,examination,assessment,monitoring,physiotherapy,rehabilitation,recovery,treatment,medication,prescription,supplementation,hydration,nutrition,compliance,exemption,clearance,doping,prohibited,anti,sports,sport,para,olympic,gold,quest,national,authority,medical,team,unit,records,staff,coaching,training,competition,strength,conditioning,session,active,rest,weekly,daily,monthly,annual,pre,post,match,simulation,distribution,summary,notes,note,report,date,signed,prepared,reviewed,reported,prescribed,section,reference,range,result,parameter,status,target,current,page,period,phase,action,items,findings,progress,next,follow,monday,tuesday,wednesday,thursday,friday,saturday,sunday,january,february,march,april,may,june,july,august,september,october,november,december,morning,afternoon,evening,chief,complaint,presenting,history,physical,body,mass,weight,height,fat,composition,intake,load,ratio,heart,rate,pressure,sugar,count,studies,panel,use,science,medicine,diet,plan,meal,log,key,new,old,raw,net,set,full,light,heavy,safe,good,best,first,last,only,other,same,india,indian,senior,junior,general,central,assistant,deputy,special,final,round,event,game,state,city,district,zone,region,level,class,group,table,grade,type,form,test,trial,sample,dose,drug,fluid,food,bone,skin,cell,nerve,vein,tube,ward,case,care,risk,side,back,front,base,area,part,line,size,week,year,time,hour,data,file,open,close'.split(','));
+
+  const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal'.split(','));
 
   function ok(w){
-    if(w.length<3)return false;
+    if(w.length<2)return false;
     if(BAD.has(w.toLowerCase()))return false;
     if(!/^[A-Z]/.test(w))return false;
-    if(/(?:tion|ment|ness|ance|ence|ical|ology|istry|osis|itis|emia|uria|gram|cyte|lysis|scopy|pathy|plasty|ectomy)$/.test(w.toLowerCase()))return false;
+    if(/(?:tion|ment|ness|ance|ence|ical|ology|istry|osis|itis|emia|uria|gram|cyte|lysis|scopy|pathy|plasty|ectomy)$/i.test(w))return false;
     return true;
   }
 
-  // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X"
+  // Normalize ALL-CAPS words (4+ letters) to Title Case for detection
+  const norm=text.replace(/\b([A-Z]{4,})\b/g,m=>m.charAt(0)+m.slice(1).toLowerCase());
+
+  // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X" — case-insensitive for ALL-CAPS docs
   const labeled=[
-    /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
-    /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist)\s*:\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
-    /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
-    /(?:Signed|Prepared by|Reported by|Reviewed by)\s*:?\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/g,
+    /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist|Dietitian|Psychologist)\s*:\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Signed|Prepared by|Reported by|Reviewed by|Assessed by|Referred by|Attended by|Supervised by)\s*:?\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
   ];
-  labeled.forEach(re=>{let m;while((m=re.exec(text))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
+  labeled.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
 
-  // 2) Context: "with X", "X reported", "X's knee"
+  // 2) Initials-based names: "P.V. Sindhu", "M.C. Mary Kom", "K.L. Rahul"
+  {const reInit=/\b([A-Z]\.(?:\s*[A-Z]\.)*)\s+([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){0,2})/g;
+  let m;while((m=reInit.exec(norm))!==null){
+    const initials=m[1].replace(/\s+/g,'');
+    const nameParts=m[2].trim().split(/\s+/).filter(ok);
+    if(nameParts.length>=1)found.add(initials+' '+nameParts.join(' '));
+  }}
+
+  // 3) Context: "with X", "X reported", "X's knee"
   const ctx=[
-    /(?:with|briefed|advised|counselled|partner|against|sparring)\s+(?:Dr\.?\s+)?([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})/g,
-    /([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})\s+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised)/g,
-    /([A-Z][a-z]{2,15}(?:\s+[A-Z][a-z]{2,15}){1,2})(?:'s|'s)\s/g,
+    /(?:with|briefed|advised|counselled|partner|against|sparring|from|under)\s+(?:Dr\.?\s+)?([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})/g,
+    /([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})\s+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented)/g,
+    /([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})(?:'s|'s)\s/g,
   ];
-  ctx.forEach(re=>{let m;while((m=re.exec(text))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
+  ctx.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
 
-  // 3) Repeated capitalized pairs (2+ occurrences)
-  let m;const re2=/\b([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})\b/g;
-  while((m=re2.exec(text))!==null){
+  // 4) Repeated capitalized pairs (2+ occurrences)
+  {let m;const re2=/\b([A-Z][a-zA-Z]{1,15}\s+[A-Z][a-zA-Z]{1,15})\b/g;
+  while((m=re2.exec(norm))!==null){
     const c=m[1].trim();if(!c.split(/\s+/).every(ok))continue;
-    if((text.match(new RegExp(c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length>=2)found.add(c);
-  }
+    if((norm.match(new RegExp('\\b'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g'))||[]).length>=2)found.add(c);
+  }}
 
-  // Remove substring names
+  // 5) Indian surname signal: capitalized pair with a known Indian surname, even once
+  {let m;const re3=/\b([A-Z][a-zA-Z]{1,15}\s+[A-Z][a-zA-Z]{1,15})\b/g;
+  while((m=re3.exec(norm))!==null){
+    const c=m[1].trim();const ws=c.split(/\s+/);
+    if(!ws.every(ok))continue;
+    if(ws.some(w=>INDIAN_SURNAMES.has(w.toLowerCase())))found.add(c);
+  }}
+
+  // Remove substring names (keep longest form)
   const arr=Array.from(found);
   return arr.filter(n=>!arr.some(o=>o!==n&&o.includes(n)&&o.length>n.length));
 }
@@ -438,7 +458,7 @@ function toStep2(){
 function renderS2(){
   let h=esc(D.txt);
   [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
-    h=h.replace(new RegExp(esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="nhl">'+esc(n)+'</span>');
+    h=h.replace(new RegExp('\\b'+esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','gi'),'<span class="nhl">'+esc(n)+'</span>');
   });
   document.getElementById('htxt').innerHTML=h;
   const c=document.getElementById('chips');
@@ -463,8 +483,20 @@ function toStep3(){
 function toStep4(){
   for(const n of D.names)if(!D.alias[n]||!D.alias[n].trim()){msg('Give every name an alias');return}
   let masked=D.raw;
+  // Phase 1: Replace full names (longest first), case-insensitive, word-bounded
   [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
-    masked=masked.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),D.alias[n]);
+    const escaped=n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    masked=masked.replace(new RegExp('\\b'+escaped+'\\b','gi'),D.alias[n]);
+  });
+  // Phase 2: Replace standalone first/last name parts (catches "Neeraj reported..." when "Neeraj Chopra" was detected)
+  const _pm={};
+  D.names.forEach(n=>{n.split(/\s+/).forEach(p=>{
+    if(p.length<3||/^[A-Z]\.$/.test(p))return;
+    const k=p.toLowerCase();if(!_pm[k])_pm[k]={w:p,a:new Set()};_pm[k].a.add(D.alias[n]);
+  })});
+  Object.values(_pm).filter(v=>v.a.size===1).sort((a,b)=>b.w.length-a.w.length).forEach(v=>{
+    const escaped=v.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    masked=masked.replace(new RegExp('\\b'+escaped+'\\b','gi'),[...v.a][0]);
   });
   D.masked=masked;
   let h=esc(D.masked);
