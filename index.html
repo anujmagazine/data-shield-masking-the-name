@@ -122,6 +122,25 @@ textarea::placeholder{color:var(--muted)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);padding:12px 24px;background:var(--primary);color:#fff;border-radius:50px;font-size:14px;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,.1);opacity:0;transition:.3s;z-index:100}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .hide{display:none!important}
+
+/* Privacy modal */
+.priv-link{background:none;border:none;color:var(--accent);font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0}
+.priv-link:hover{color:var(--accent2)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:.25s}
+.modal-bg.on{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.15);position:relative}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);font-weight:700;line-height:1}
+.modal-close:hover{color:var(--primary)}
+.modal h2{font-size:20px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.modal p{font-size:14px;color:var(--sec);line-height:1.7;margin-bottom:14px}
+.modal .proof{background:#f0fdf9;border:1.5px solid #a7f3d0;border-radius:var(--rs);padding:14px 16px;margin-bottom:14px}
+.modal .proof-t{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.modal .proof p{margin-bottom:0;font-size:13px}
+.modal .qalist{list-style:none;padding:0}
+.modal .qalist li{padding:12px 0;border-bottom:1px solid var(--border)}
+.modal .qalist li:last-child{border-bottom:none}
+.modal .qalist strong{display:block;font-size:14px;color:var(--primary);margin-bottom:4px}
+.modal .qalist span{font-size:13px;color:var(--sec);line-height:1.6}
 @media(max-width:600px){.ctr{padding:16px 14px 48px}.card{padding:20px 16px}.sp>span:not(.sn){display:none}.alr{flex-direction:column;align-items:stretch}.al-orig{min-width:unset}.tabs{flex-direction:column}}
 </style>
 </head>
@@ -134,9 +153,12 @@ textarea::placeholder{color:var(--muted)}
       <div class="logo-i">🛡</div>
       <div><h1>DataShield</h1><p>Mask athlete data before using AI</p></div>
     </div>
-    <div class="badge">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-      100% Local — No Data Leaves This Device
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        100% Local
+      </div>
+      <button class="priv-link" onclick="document.getElementById('priv-modal').classList.add('on')">How is my data safe?</button>
     </div>
   </div>
 
@@ -227,6 +249,40 @@ textarea::placeholder{color:var(--muted)}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- Privacy modal -->
+<div class="modal-bg" id="priv-modal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('priv-modal').classList.remove('on')">&#x2715;</button>
+    <h2><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> How is my data safe?</h2>
+    <p>DataShield works entirely inside your browser. Your documents, names, and masked output are <strong>never sent to any server</strong> — not to us, not to GitHub, not to anyone.</p>
+
+    <div class="proof">
+      <div class="proof-t">Prove it yourself (10 seconds)</div>
+      <p>Load this page, then <strong>turn off your WiFi or switch to airplane mode</strong>. Paste a document, detect names, mask them, and download. Everything still works. If data were going anywhere, this would break.</p>
+    </div>
+
+    <ul class="qalist">
+      <li>
+        <strong>But this app is hosted on GitHub?</strong>
+        <span>GitHub only delivers the app code to your browser — like a vending machine handing you a sealed notebook. It has no idea what you write inside. Once the page loads, GitHub is not involved.</span>
+      </li>
+      <li>
+        <strong>What about the image scanning and PDF reading?</strong>
+        <span>Image text extraction (OCR) runs via Tesseract.js and PDF reading via Mozilla pdf.js — both run entirely inside your browser. No cloud processing. No uploads.</span>
+      </li>
+      <li>
+        <strong>Can anyone see what I paste here?</strong>
+        <span>No. There are no analytics, no tracking, no cookies, no accounts, and no server to receive data. You can verify this by opening your browser's Network tab (F12) — you will see zero data being sent out.</span>
+      </li>
+      <li>
+        <strong>What happens to my data when I close the tab?</strong>
+        <span>It disappears completely. Nothing is saved to disk or memory. The next time you open the app, it starts fresh.</span>
+      </li>
+    </ul>
+    <p style="text-align:center;margin:18px 0 0;font-size:13px;color:var(--accent);font-weight:700">Built for athlete privacy by AI&amp;Beyond for OGQ.</p>
+  </div>
+</div>
 
 <script>
 /* ══════════════════════════════════════════
@@ -586,6 +642,9 @@ function reset(){
    ══════════════════════════════════════════ */
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function msg(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),3000)}
+
+/* Service Worker — caches all assets for offline use */
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
 </body>
 </html>
