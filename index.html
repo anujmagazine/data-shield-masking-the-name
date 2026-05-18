@@ -423,19 +423,34 @@ function rmPdf(){
 }
 
 /* ══════════════════════════════════════════
-   NAME DETECTION v2 — Precision Engine
+   NAME DETECTION v3 — Precision + Recall
    ══════════════════════════════════════════ */
 function detectNames(text){
   const found=new Set();
 
-  const BAD=new Set('normal,elevated,low,high,total,serum,blood,fasting,complete,acute,chronic,mild,moderate,severe,positive,negative,pending,cleared,optimal,adequate,inadequate,suboptimal,borderline,haemoglobin,haematocrit,platelet,reticulocyte,transferrin,ferritin,creatine,creatinine,kinase,cortisol,testosterone,cholesterol,triglycerides,glucose,urea,calcium,magnesium,iron,vitamin,protein,casein,whey,omega,isolate,monohydrate,glycinate,hemoglobin,hematocrit,right,left,upper,lower,posterior,anterior,lateral,medial,deltoid,infraspinatus,scapular,rotator,cuff,spinal,cord,knee,shoulder,ankle,hip,limb,muscle,tendon,clinical,therapeutic,diagnostic,examination,assessment,monitoring,physiotherapy,rehabilitation,recovery,treatment,medication,prescription,supplementation,hydration,nutrition,compliance,exemption,clearance,doping,prohibited,anti,sports,sport,para,olympic,gold,quest,national,authority,medical,team,unit,records,staff,coaching,training,competition,strength,conditioning,session,active,rest,weekly,daily,monthly,annual,pre,post,match,simulation,distribution,summary,notes,note,report,date,signed,prepared,reviewed,reported,prescribed,section,reference,range,result,parameter,status,target,current,page,period,phase,action,items,findings,progress,next,follow,monday,tuesday,wednesday,thursday,friday,saturday,sunday,january,february,march,april,may,june,july,august,september,october,november,december,morning,afternoon,evening,chief,complaint,presenting,history,physical,body,mass,weight,height,fat,composition,intake,load,ratio,heart,rate,pressure,sugar,count,studies,panel,use,science,medicine,diet,plan,meal,log,key,new,old,raw,net,set,full,light,heavy,safe,good,best,first,last,only,other,same,india,indian,senior,junior,general,central,assistant,deputy,special,final,round,event,game,state,city,district,zone,region,level,class,group,table,grade,type,form,test,trial,sample,dose,drug,fluid,food,bone,skin,cell,nerve,vein,tube,ward,case,care,risk,side,back,front,base,area,part,line,size,week,year,time,hour,data,file,open,close'.split(','));
+  // --- BLOCKLIST: words that are NEVER person names ---
+  const BAD=new Set(('normal,elevated,low,high,total,serum,blood,fasting,complete,acute,chronic,mild,moderate,severe,positive,negative,pending,cleared,optimal,adequate,inadequate,suboptimal,borderline,haemoglobin,haematocrit,platelet,reticulocyte,transferrin,ferritin,creatine,creatinine,kinase,cortisol,testosterone,cholesterol,triglycerides,glucose,urea,calcium,magnesium,iron,vitamin,protein,casein,whey,omega,isolate,monohydrate,glycinate,hemoglobin,hematocrit,right,left,upper,lower,posterior,anterior,lateral,medial,deltoid,infraspinatus,scapular,rotator,cuff,spinal,cord,knee,shoulder,ankle,hip,limb,muscle,tendon,clinical,therapeutic,diagnostic,examination,assessment,monitoring,physiotherapy,rehabilitation,recovery,treatment,medication,prescription,supplementation,hydration,nutrition,compliance,exemption,clearance,doping,prohibited,anti,sports,sport,para,olympic,gold,quest,national,authority,medical,team,unit,records,staff,coaching,training,competition,strength,conditioning,session,active,rest,weekly,daily,monthly,annual,pre,post,match,simulation,distribution,summary,notes,note,report,date,signed,prepared,reviewed,reported,prescribed,section,reference,range,result,parameter,status,target,current,page,period,phase,action,items,findings,progress,next,follow,monday,tuesday,wednesday,thursday,friday,saturday,sunday,january,february,march,april,may,june,july,august,september,october,november,december,morning,afternoon,evening,chief,complaint,presenting,history,physical,body,mass,weight,height,fat,composition,intake,load,ratio,heart,rate,pressure,sugar,count,studies,panel,use,science,medicine,diet,plan,meal,log,key,new,old,raw,net,set,full,light,heavy,safe,good,best,first,last,only,other,same,india,indian,senior,junior,general,central,assistant,deputy,special,final,round,event,game,state,city,district,zone,region,level,class,group,table,grade,type,form,test,trial,sample,dose,drug,fluid,food,bone,skin,cell,nerve,vein,tube,ward,case,care,risk,side,back,front,base,area,part,line,size,week,year,time,hour,data,file,open,close,'+
+  // Common English words (prevent "D. The", "On Track" etc.)
+  'the,and,but,for,not,nor,yet,off,out,per,via,all,any,both,each,few,some,such,very,just,even,also,too,still,was,were,are,has,had,been,his,her,our,their,its,who,how,why,what,can,will,would,shall,should,could,might,must,did,does,than,then,when,where,which,while,have,having,being,on,at,to,by,up,so,do,no,go,if,or,'+
+  // Sports events and terminology
+  'men,women,singles,doubles,mixed,relay,freestyle,backstroke,breaststroke,butterfly,medley,marathon,sprint,hurdles,javelin,discus,hammer,shot,put,vault,throw,jump,walk,steeplechase,decathlon,heptathlon,compound,recurve,pistol,rifle,trap,skeet,track,field,pool,court,ring,mat,lane,heat,bout,innings,penalty,stroke,pace,endurance,agility,power,speed,force,velocity,technique,protocol,strategy,physio,rehab,laser,exercise,exercises,prehab,posture,explosive,'+
+  // Academic/PDF terms
+  'university,institute,college,centre,center,research,department,faculty,kingdom,united,effects,comparisons,intended,results,methods,analysis,approach,study,participants,measures,outcomes,baseline,intervention,statistical,significant,discussion,conclusion,introduction,abstract,references,figure,london,middlesex,australia,england,salford').split(','));
 
-  const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal'.split(','));
+  // --- Known Indian surnames (signal for pair detection) ---
+  const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal,swarnkar,dahiya,punia,panghal,antil,borgohain,zareen,loganathan,thangavelu,mariappan,jhajharia,sargar,solanki,tomar,sheoran,negi,rawat,bisht,jat,meena,gujjar,ahuja,bajaj,batra,chhabra,dutt,grover,hora,jolly,kathuria,marwah,nagpal,sehgal,talwar,uppal,vohra'.split(','));
+
+  // --- Known Indian first names (enables single-word detection) ---
+  const INDIAN_FIRST_NAMES=new Set('aarav,abhay,abhishek,aditya,ajay,ajit,akash,akhil,amar,amit,amrit,aniket,anil,ankit,ankur,anoop,anuj,arjun,arun,ashish,ashok,atul,ayush,balraj,bharat,bhuvan,chirag,darshan,deepak,dev,devendra,dhruv,dilip,dinesh,ganesh,gaurav,girish,gopal,govind,hari,harish,harsh,hemant,hitesh,ishaan,jatin,jay,kamal,karan,karthik,kartik,kishan,krishna,kunal,lalit,lokesh,manoj,manish,mahesh,mohit,mukesh,naman,naresh,naveen,navdeep,neeraj,nikhil,nitin,om,pankaj,paras,pawan,pradeep,prakash,pranav,prashant,pratik,praveen,rahul,raj,rajesh,rakesh,ram,ramesh,ranbir,ranveer,ravi,rishabh,ritesh,rohit,sachin,sahil,sagar,sandeep,sanjay,sanjeet,santosh,satish,shashank,shivam,shubham,siddharth,sudhir,sumit,sunil,suraj,suresh,tanmay,tarun,tushar,utkarsh,varun,venkatesh,vijay,vikas,vikram,vinay,vinod,virat,vishal,vivek,yash,yogesh,aishwarya,amrita,ananya,ankita,anushka,anu,asha,bhavna,chitra,deepika,devika,dimple,divya,ekta,garima,gauri,geeta,harini,hema,isha,jaya,jyoti,kajal,kalpana,kamini,kiran,komal,kriti,lakshmi,madhu,mansi,meena,meera,megha,mira,monika,nandini,neha,nidhi,nisha,nita,pallavi,parul,pawani,pooja,prerna,priya,priyanka,radha,rajni,rani,rashmi,renu,richa,ritu,roshni,sakshi,sangeeta,sapna,sarita,savita,seema,shikha,shilpa,shraddha,shreya,shweta,sita,smita,sneha,sonia,sudha,suman,sunita,swati,tanu,tara,uma,usha,vandana,vidya,yamini,aishpreet,amarjeet,balpreet,gurpreet,harjeet,harpreet,jaspreet,manpreet,navjot,paramjeet,sukhjeet,sukhpreet,reva,swapnil,mariyappan,pushkar,lovlina,nikhat,antim,mirabai,saina,mary,hima,dutee,manu,elavenil,manika,sharath,sathiyan,sreejesh,manpreet,rupinder,birendra,rohan,lakshya,prannoy,satwik,satish,gagan,saurabh,divyansh,bajrang,sushil,yogeshwar,sakshi,vinesh,neeraj,subedar,fouaad,bhavani,aditi,jyothi,jeswin,sreeshankar,avinash,tejaswin,murali,parul,simranjit,pooja,manisha,revathi,shaili,kishore,gopi,sangita,bimol,saweety,pinki'.split(','));
+
+  function isName(w){return INDIAN_FIRST_NAMES.has(w.toLowerCase())||INDIAN_SURNAMES.has(w.toLowerCase())}
 
   function ok(w){
     if(w.length<2)return false;
     if(BAD.has(w.toLowerCase()))return false;
     if(!/^[A-Z]/.test(w))return false;
+    // Reject short ALL-CAPS words (acronyms like PUT, SUS, RFD, BCA) unless they're known names
+    if(w.length<=4&&w===w.toUpperCase()&&!isName(w))return false;
     if(/(?:tion|ment|ness|ance|ence|ical|ology|istry|osis|itis|emia|uria|gram|cyte|lysis|scopy|pathy|plasty|ectomy)$/i.test(w))return false;
     return true;
   }
@@ -443,7 +458,7 @@ function detectNames(text){
   // Normalize ALL-CAPS words (4+ letters) to Title Case for detection
   const norm=text.replace(/\b([A-Z]{4,})\b/g,m=>m.charAt(0)+m.slice(1).toLowerCase());
 
-  // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X" — case-insensitive for ALL-CAPS docs
+  // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X"
   const labeled=[
     /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
     /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist|Dietitian|Psychologist)\s*:\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
@@ -452,12 +467,13 @@ function detectNames(text){
   ];
   labeled.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
 
-  // 2) Initials-based names: "P.V. Sindhu", "M.C. Mary Kom", "K.L. Rahul"
+  // 2) Initials: "P.V. Sindhu", "K.L. Rahul" — ONLY if name part is a known name or has 2+ words
   {const reInit=/\b([A-Z]\.(?:\s*[A-Z]\.)*)\s+([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){0,2})/g;
   let m;while((m=reInit.exec(norm))!==null){
     const initials=m[1].replace(/\s+/g,'');
     const nameParts=m[2].trim().split(/\s+/).filter(ok);
-    if(nameParts.length>=1)found.add(initials+' '+nameParts.join(' '));
+    if(nameParts.length>=2)found.add(initials+' '+nameParts.join(' '));
+    else if(nameParts.length===1&&isName(nameParts[0]))found.add(initials+' '+nameParts[0]);
   }}
 
   // 3) Context: "with X", "X reported", "X's knee"
@@ -481,6 +497,20 @@ function detectNames(text){
     const c=m[1].trim();const ws=c.split(/\s+/);
     if(!ws.every(ok))continue;
     if(ws.some(w=>INDIAN_SURNAMES.has(w.toLowerCase())))found.add(c);
+  }}
+
+  // 6) Numbered/lettered list items: "B Naresh", "2 Reva Swarnkar", "1. Aarav Singh"
+  {const reList=/(?:^|[\n\r])\s*(?:[A-Za-z0-9]{1,3}[.):\-]?\s+)([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){0,2})/gm;
+  let m;while((m=reList.exec(norm))!==null){
+    const ws=m[1].trim().split(/\s+/).filter(ok);
+    if(ws.length>=2||(ws.length===1&&isName(ws[0])))found.add(ws.join(' '));
+  }}
+
+  // 7) Known Indian first names anywhere in text (single-word detection)
+  {const reWord=/\b([A-Z][a-zA-Z]{2,15})\b/g;
+  let m;while((m=reWord.exec(norm))!==null){
+    const w=m[1];
+    if(ok(w)&&INDIAN_FIRST_NAMES.has(w.toLowerCase()))found.add(w);
   }}
 
   // Remove substring names (keep longest form)
