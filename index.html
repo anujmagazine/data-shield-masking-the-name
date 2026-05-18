@@ -123,6 +123,16 @@ textarea::placeholder{color:var(--muted)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .hide{display:none!important}
 
+/* Known names input */
+.kn-sec{margin-top:18px;padding:14px 16px;background:#f8fafc;border:1.5px solid var(--border);border-radius:var(--rs)}
+.kn-label{font-size:13px;font-weight:700;margin-bottom:8px}
+.kn-input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:var(--rs);font-family:var(--f);font-size:13px;background:#fff;color:var(--primary)}
+.kn-input:focus{outline:none;border-color:var(--accent)}
+.kn-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+/* Step 2 contextual tip */
+.s2tip{padding:12px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--rs);font-size:13px;color:#1e40af;margin-bottom:14px;line-height:1.6}
+
 /* Privacy modal */
 .priv-link{background:none;border:none;color:var(--accent);font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:2px;padding:0}
 .priv-link:hover{color:var(--accent2)}
@@ -191,7 +201,7 @@ textarea::placeholder{color:var(--muted)}
       <div class="dz" id="dz-img" onclick="document.getElementById('f-img').click()">
         <div class="dz-icon">📷</div>
         <div class="dz-t">Drop a photo or click to upload</div>
-        <div class="dz-h">JPG, PNG — handwritten notes, prescriptions, reports</div>
+        <div class="dz-h">Works best with clear photos of printed/typed text. Handwriting may not scan well.</div>
       </div>
       <input type="file" id="f-img" accept="image/*" style="display:none" onchange="onImg(this)">
       <div class="finfo" id="fi-img"><span>📎</span><span id="fi-img-n"></span><button class="x" onclick="rmImg()">✕</button></div>
@@ -210,11 +220,18 @@ textarea::placeholder{color:var(--muted)}
       <div class="prog" id="pr-pdf"><div class="prog-track"><div class="prog-fill" id="pf-pdf"></div></div><div class="prog-lbl" id="pl-pdf">Reading PDF...</div></div>
     </div>
 
+    <div class="kn-sec">
+      <div class="kn-label">Already know the names in this document? <span style="color:var(--muted);font-weight:500">(optional)</span></div>
+      <input type="text" id="known-names" class="kn-input" placeholder="Type names separated by commas — e.g. Neeraj Chopra, Dr. Anand Mehta, Saina">
+      <div class="kn-hint">These names will always be detected, even if the auto-scan misses them.</div>
+    </div>
+
     <div class="br br-r"><button class="btn btn1" onclick="toStep2()">Extract & Detect Names →</button></div>
   </div>
 
   <!-- ═══ STEP 2 ═══ -->
   <div class="card hide" id="s2">
+    <div id="s2tip"></div>
     <div class="ct">Review detected names</div>
     <div class="cs">We found these person names. Remove false matches or add missed ones.</div>
     <div class="ebox" id="htxt"></div>
@@ -363,10 +380,20 @@ async function processImage(file){
     D.txt=result.data.text.trim();
     pf.style.width='100%';
 
-    if(D.txt.length>5){
-      pl.textContent='✓ Extracted '+D.txt.length+' characters — all processed on your device';
+    const _ac=(D.txt.match(/[a-zA-Z]/g)||[]).length;
+    const _ar=D.txt.length>0?_ac/D.txt.length:0;
+
+    if(D.txt.length>100&&_ar>0.4){
+      pl.textContent='✓ Text read from image. Click "Extract & Detect Names" to continue.';
+    }else if(D.txt.length>20){
+      pl.textContent='⚠ Some text was found, but parts may be hard to read. You can still continue — check and add names in the next step.';
+      pl.style.color='#b45309';
+    }else if(D.txt.length>5){
+      pl.textContent='⚠ Very little text found. Try a clearer, well-lit photo. Or use the "Paste Text" tab to type the text directly.';
+      pl.style.color='#b45309';
     }else{
-      pl.textContent='⚠ Very little text found. Try a clearer, higher-contrast image.';
+      pl.textContent='⚠ Could not read this image. Try a different photo, or use the "Paste Text" tab to type the text directly.';
+      pl.style.color='#dc2626';
     }
   }catch(err){
     console.error('OCR Error:',err);
@@ -435,7 +462,7 @@ function detectNames(text){
   // Sports events and terminology
   'men,women,singles,doubles,mixed,relay,freestyle,backstroke,breaststroke,butterfly,medley,marathon,sprint,hurdles,javelin,discus,hammer,shot,put,vault,throw,jump,walk,steeplechase,decathlon,heptathlon,compound,recurve,pistol,rifle,trap,skeet,track,field,pool,court,ring,mat,lane,heat,bout,innings,penalty,stroke,pace,endurance,agility,power,speed,force,velocity,technique,protocol,strategy,physio,rehab,laser,exercise,exercises,prehab,posture,explosive,'+
   // Academic/PDF terms
-  'university,institute,college,centre,center,research,department,faculty,kingdom,united,effects,comparisons,intended,results,methods,analysis,approach,study,participants,measures,outcomes,baseline,intervention,statistical,significant,discussion,conclusion,introduction,abstract,references,figure,london,middlesex,australia,england,salford').split(','));
+  'university,institute,college,centre,center,research,department,faculty,kingdom,united,effects,comparisons,intended,results,methods,analysis,approach,study,participants,measures,outcomes,baseline,intervention,statistical,significant,discussion,conclusion,introduction,abstract,references,figure,london,middlesex,australia,england,salford,he,she,we,me,be,te,re,it,am,us,coach,trainer,doctor,an,no,so,do,go,if,or,my').split(','));
 
   // --- Known Indian surnames (signal for pair detection) ---
   const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal,swarnkar,dahiya,punia,panghal,antil,borgohain,zareen,loganathan,thangavelu,mariappan,jhajharia,sargar,solanki,tomar,sheoran,negi,rawat,bisht,jat,meena,gujjar,ahuja,bajaj,batra,chhabra,dutt,grover,hora,jolly,kathuria,marwah,nagpal,sehgal,talwar,uppal,vohra'.split(','));
@@ -460,15 +487,15 @@ function detectNames(text){
 
   // 1) Labeled: "Athlete: X", "Dr. X", "Coach: X", "Signed: X"
   const labeled=[
-    /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
-    /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist|Dietitian|Psychologist)\s*:\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
-    /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
-    /(?:Signed|Prepared by|Reported by|Reviewed by|Assessed by|Referred by|Attended by|Supervised by)\s*:?\s*(?:Dr\.?\s+)?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Athlete|Patient|Client|Subject|Player)\s*:\s*([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Coach|Trainer|Nutritionist|Physician|Physiotherapist|Scientist|Dietitian|Psychologist)\s*:\s*(?:Dr\.?[ \t]+)?([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?[ \t]+([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
+    /(?:Signed|Prepared by|Reported by|Reviewed by|Assessed by|Referred by|Attended by|Supervised by)\s*:?\s*(?:Dr\.?[ \t]+)?([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
   ];
   labeled.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
 
   // 2) Initials: "P.V. Sindhu", "K.L. Rahul" — ONLY if name part is a known name or has 2+ words
-  {const reInit=/\b([A-Z]\.(?:\s*[A-Z]\.)*)\s+([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){0,2})/g;
+  {const reInit=/\b([A-Z]\.(?:\s*[A-Z]\.)*)\s+([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){0,2})/g;
   let m;while((m=reInit.exec(norm))!==null){
     const initials=m[1].replace(/\s+/g,'');
     const nameParts=m[2].trim().split(/\s+/).filter(ok);
@@ -478,21 +505,21 @@ function detectNames(text){
 
   // 3) Context: "with X", "X reported", "X's knee"
   const ctx=[
-    /(?:with|briefed|advised|counselled|partner|against|sparring|from|under)\s+(?:Dr\.?\s+)?([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})/g,
-    /([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})\s+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented)/g,
-    /([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){1,2})(?:'s|'s)\s/g,
+    /(?:with|briefed|advised|counselled|partner|against|sparring|from|under)[ \t]+(?:Dr\.?[ \t]+)?([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})/g,
+    /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})[ \t]+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented)/g,
+    /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})(?:'s|'s)\s/g,
   ];
   ctx.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
 
   // 4) Repeated capitalized pairs (2+ occurrences)
-  {let m;const re2=/\b([A-Z][a-zA-Z]{1,15}\s+[A-Z][a-zA-Z]{1,15})\b/g;
+  {let m;const re2=/\b([A-Z][a-zA-Z]{1,15}[ \t]+[A-Z][a-zA-Z]{1,15})\b/g;
   while((m=re2.exec(norm))!==null){
     const c=m[1].trim();if(!c.split(/\s+/).every(ok))continue;
     if((norm.match(new RegExp('\\b'+c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','g'))||[]).length>=2)found.add(c);
   }}
 
   // 5) Indian surname signal: capitalized pair with a known Indian surname, even once
-  {let m;const re3=/\b([A-Z][a-zA-Z]{1,15}\s+[A-Z][a-zA-Z]{1,15})\b/g;
+  {let m;const re3=/\b([A-Z][a-zA-Z]{1,15}[ \t]+[A-Z][a-zA-Z]{1,15})\b/g;
   while((m=re3.exec(norm))!==null){
     const c=m[1].trim();const ws=c.split(/\s+/);
     if(!ws.every(ok))continue;
@@ -500,7 +527,7 @@ function detectNames(text){
   }}
 
   // 6) Numbered/lettered list items: "B Naresh", "2 Reva Swarnkar", "1. Aarav Singh"
-  {const reList=/(?:^|[\n\r])\s*(?:[A-Za-z0-9]{1,3}[.):\-]?\s+)([A-Z][a-zA-Z]{1,15}(?:\s+[A-Z][a-zA-Z]{1,15}){0,2})/gm;
+  {const reList=/(?:^|[\n\r])\s*(?:[A-Za-z0-9]{1,3}[.):\-]?\s+)([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){0,2})/gm;
   let m;while((m=reList.exec(norm))!==null){
     const ws=m[1].trim().split(/\s+/).filter(ok);
     if(ws.length>=2||(ws.length===1&&isName(ws[0])))found.add(ws.join(' '));
@@ -534,21 +561,28 @@ function nav(n){
 
 function toStep2(){
   if(D.tab==='text') D.txt=document.getElementById('inp-text').value.trim();
-  // image & pdf already set D.txt during processing
   if(!D.txt){msg('Please provide some text first');return}
   D.raw=D.txt;
   D.names=detectNames(D.txt);
+  // Merge known names from Step 1
+  const knStr=(document.getElementById('known-names').value||'').trim();
+  if(knStr){knStr.split(',').map(n=>n.trim()).filter(n=>n.length>=2).forEach(n=>{if(!D.names.includes(n))D.names.push(n)})}
   renderS2(); nav(2);
 }
 
 function renderS2(){
+  // Contextual tip based on input source
+  const tipEl=document.getElementById('s2tip');
+  if(D.tab==='image')tipEl.innerHTML='<div class="s2tip">Photo scanning may not catch every name, especially from handwriting. Please check the list below and add any names that were missed.</div>';
+  else tipEl.innerHTML='';
+
   let h=esc(D.txt);
   [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
     h=h.replace(new RegExp('\\b'+esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','gi'),'<span class="nhl">'+esc(n)+'</span>');
   });
   document.getElementById('htxt').innerHTML=h;
   const c=document.getElementById('chips');
-  if(!D.names.length){c.innerHTML='<div style="font-size:13px;color:#92400e">No names detected. Add them manually below.</div>';return}
+  if(!D.names.length){c.innerHTML='<div style="font-size:13px;color:#92400e">No names detected. Add them manually below, or go back and type names in the "Already know the names?" field.</div>';return}
   c.innerHTML=D.names.map((n,i)=>'<span class="chip">'+esc(n)+'<button class="rm" onclick="rmN('+i+')">✕</button></span>').join('');
 }
 
@@ -664,6 +698,7 @@ function dlPdf(){
 function reset(){
   D={tab:'text',raw:'',txt:'',names:[],alias:{},masked:''};
   document.getElementById('inp-text').value='';
+  document.getElementById('known-names').value='';
   rmImg();rmPdf();setTab('text');nav(1);
 }
 
