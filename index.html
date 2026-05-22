@@ -462,13 +462,13 @@ function detectNames(text){
   // Sports events and terminology
   'men,women,singles,doubles,mixed,relay,freestyle,backstroke,breaststroke,butterfly,medley,marathon,sprint,hurdles,javelin,discus,hammer,shot,put,vault,throw,jump,walk,steeplechase,decathlon,heptathlon,compound,recurve,pistol,rifle,trap,skeet,track,field,pool,court,ring,mat,lane,heat,bout,innings,penalty,stroke,pace,endurance,agility,power,speed,force,velocity,technique,protocol,strategy,physio,rehab,laser,exercise,exercises,prehab,posture,explosive,'+
   // Academic/PDF terms
-  'university,institute,college,centre,center,research,department,faculty,kingdom,united,effects,comparisons,intended,results,methods,analysis,approach,study,participants,measures,outcomes,baseline,intervention,statistical,significant,discussion,conclusion,introduction,abstract,references,figure,london,middlesex,australia,england,salford,he,she,we,me,be,te,re,it,am,us,coach,trainer,doctor,an,no,so,do,go,if,or,my').split(','));
+  'university,institute,college,centre,center,research,department,faculty,kingdom,united,effects,comparisons,intended,results,methods,analysis,approach,study,participants,measures,outcomes,baseline,intervention,statistical,significant,discussion,conclusion,introduction,abstract,references,figure,london,middlesex,australia,england,salford,he,she,we,me,be,te,re,it,am,us,coach,trainer,doctor,nutritionist,physiotherapist,physician,scientist,dietitian,psychologist,therapist,surgeon,specialist,consultant,professor,analyst,manager,director,officer,coordinator,supervisor,attendant,nurse,attendee,an,no,so,do,go,if,or,my').split(','));
 
   // --- Known Indian surnames (signal for pair detection) ---
-  const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal,swarnkar,dahiya,punia,panghal,antil,borgohain,zareen,loganathan,thangavelu,mariappan,jhajharia,sargar,solanki,tomar,sheoran,negi,rawat,bisht,jat,meena,gujjar,ahuja,bajaj,batra,chhabra,dutt,grover,hora,jolly,kathuria,marwah,nagpal,sehgal,talwar,uppal,vohra'.split(','));
+  const INDIAN_SURNAMES=new Set('singh,kumar,sharma,verma,gupta,patel,shah,mehta,joshi,rao,reddy,nair,menon,pillai,iyer,iyengar,das,sen,bose,mukherjee,chatterjee,banerjee,ghosh,roy,devi,kaur,chauhan,yadav,thakur,mishra,pandey,tiwari,dubey,srivastava,agarwal,saxena,malhotra,kapoor,chopra,arora,bhatia,sethi,kohli,dhawan,phogat,chanu,gopichand,tendulkar,dravid,ganguly,kumble,sehwag,gambhir,raina,jadeja,bumrah,pujara,ashwin,rahane,shastri,nehwal,sindhu,srikanth,bhutia,paes,bindra,rajput,rathore,sandhu,dhillon,sidhu,grewal,tandon,trivedi,bhatt,desai,parikh,sheth,mistry,mandhana,bajrang,harbhajan,amritraj,narang,swamy,murthy,prasad,gowda,hegde,patil,kulkarni,jadhav,shinde,pawar,chavan,more,bhosale,nikam,wagh,thapa,tamang,gurung,sherpa,pradhan,subedi,karki,chetri,lepcha,bhutani,khanna,oberoi,anand,bedi,khurana,luthra,sahni,walia,dhingra,garg,mittal,goyal,bansal,singhal,oswal,swarnkar,dahiya,punia,panghal,antil,borgohain,zareen,loganathan,thangavelu,mariappan,jhajharia,sargar,solanki,tomar,sheoran,negi,rawat,bisht,jat,meena,gujjar,ahuja,bajaj,batra,chhabra,dutt,grover,hora,jolly,kathuria,marwah,nagpal,sehgal,talwar,uppal,vohra,unhalkar,solaimalai,srikumar,lekhara,agrawal,jeevanji,dharamraj,lakra,lolge,chaudhary,kathuniya,baretha,kadam,nagar,babu,devaraddi,dalbir,sre,jatyan,ramadass,francis,hooda,narwal,jakhar,vishwanathan,sivakumar,khilari,ansari,sakuja,khandelwal,soorma,rongali,gavit,shavej,sema,katale,seth,pal,james,chouhan,nag,juyal,ahmed,ali,rayala,dilli,suhag,mangala,bhagat,pathak,malik,kengnalkar,akiranandan,jharia,premchand,tanksali,shetty,damor,bhati,murugesan,rathi,parmar,gurjar,dhillon,mathew,kumari,ram,deepika,tyagi,patel'.split(','));
 
   // --- Known Indian first names (enables single-word detection) ---
-  const INDIAN_FIRST_NAMES=new Set('aarav,abhay,abhishek,aditya,ajay,ajit,akash,akhil,amar,amit,amrit,aniket,anil,ankit,ankur,anoop,anuj,arjun,arun,ashish,ashok,atul,ayush,balraj,bharat,bhuvan,chirag,darshan,deepak,dev,devendra,dhruv,dilip,dinesh,ganesh,gaurav,girish,gopal,govind,hari,harish,harsh,hemant,hitesh,ishaan,jatin,jay,kamal,karan,karthik,kartik,kishan,krishna,kunal,lalit,lokesh,manoj,manish,mahesh,mohit,mukesh,naman,naresh,naveen,navdeep,neeraj,nikhil,nitin,om,pankaj,paras,pawan,pradeep,prakash,pranav,prashant,pratik,praveen,rahul,raj,rajesh,rakesh,ram,ramesh,ranbir,ranveer,ravi,rishabh,ritesh,rohit,sachin,sahil,sagar,sandeep,sanjay,sanjeet,santosh,satish,shashank,shivam,shubham,siddharth,sudhir,sumit,sunil,suraj,suresh,tanmay,tarun,tushar,utkarsh,varun,venkatesh,vijay,vikas,vikram,vinay,vinod,virat,vishal,vivek,yash,yogesh,aishwarya,amrita,ananya,ankita,anushka,anu,asha,bhavna,chitra,deepika,devika,dimple,divya,ekta,garima,gauri,geeta,harini,hema,isha,jaya,jyoti,kajal,kalpana,kamini,kiran,komal,kriti,lakshmi,madhu,mansi,meena,meera,megha,mira,monika,nandini,neha,nidhi,nisha,nita,pallavi,parul,pawani,pooja,prerna,priya,priyanka,radha,rajni,rani,rashmi,renu,richa,ritu,roshni,sakshi,sangeeta,sapna,sarita,savita,seema,shikha,shilpa,shraddha,shreya,shweta,sita,smita,sneha,sonia,sudha,suman,sunita,swati,tanu,tara,uma,usha,vandana,vidya,yamini,aishpreet,amarjeet,balpreet,gurpreet,harjeet,harpreet,jaspreet,manpreet,navjot,paramjeet,sukhjeet,sukhpreet,reva,swapnil,mariyappan,pushkar,lovlina,nikhat,antim,mirabai,saina,mary,hima,dutee,manu,elavenil,manika,sharath,sathiyan,sreejesh,manpreet,rupinder,birendra,rohan,lakshya,prannoy,satwik,satish,gagan,saurabh,divyansh,bajrang,sushil,yogeshwar,sakshi,vinesh,neeraj,subedar,fouaad,bhavani,aditi,jyothi,jeswin,sreeshankar,avinash,tejaswin,murali,parul,simranjit,pooja,manisha,revathi,shaili,kishore,gopi,sangita,bimol,saweety,pinki'.split(','));
+  const INDIAN_FIRST_NAMES=new Set('aarav,abhay,abhishek,aditya,ajay,ajit,akash,akhil,amar,amit,amrit,aniket,anil,ankit,ankur,anoop,anuj,arjun,arun,ashish,ashok,atul,ayush,balraj,bharat,bhuvan,chirag,darshan,deepak,dev,devendra,dhruv,dilip,dinesh,ganesh,gaurav,girish,gopal,govind,hari,harish,harsh,hemant,hitesh,ishaan,jatin,jay,kamal,karan,karthik,kartik,kishan,krishna,kunal,lalit,lokesh,manoj,manish,mahesh,mohit,mukesh,naman,naresh,naveen,navdeep,neeraj,nikhil,nitin,om,pankaj,paras,pawan,pradeep,prakash,pranav,prashant,pratik,praveen,rahul,raj,rajesh,rakesh,ram,ramesh,ranbir,ranveer,ravi,rishabh,ritesh,rohit,sachin,sahil,sagar,sandeep,sanjay,sanjeet,santosh,satish,shashank,shivam,shubham,siddharth,sudhir,sumit,sunil,suraj,suresh,tanmay,tarun,tushar,utkarsh,varun,venkatesh,vijay,vikas,vikram,vinay,vinod,virat,vishal,vivek,yash,yogesh,aishwarya,amrita,ananya,ankita,anushka,anu,asha,bhavna,chitra,deepika,devika,dimple,divya,ekta,garima,gauri,geeta,harini,hema,isha,jaya,jyoti,kajal,kalpana,kamini,kiran,komal,kriti,lakshmi,madhu,mansi,meena,meera,megha,mira,monika,nandini,neha,nidhi,nisha,nita,pallavi,parul,pawani,pooja,prerna,priya,priyanka,radha,rajni,rani,rashmi,renu,richa,ritu,roshni,sakshi,sangeeta,sapna,sarita,savita,seema,shikha,shilpa,shraddha,shreya,shweta,sita,smita,sneha,sonia,sudha,suman,sunita,swati,tanu,tara,uma,usha,vandana,vidya,yamini,aishpreet,amarjeet,balpreet,gurpreet,harjeet,harpreet,jaspreet,manpreet,navjot,paramjeet,sukhjeet,sukhpreet,reva,swapnil,mariyappan,pushkar,lovlina,nikhat,antim,mirabai,saina,mary,hima,dutee,manu,elavenil,manika,sharath,sathiyan,sreejesh,manpreet,rupinder,birendra,rohan,lakshya,prannoy,satwik,satish,gagan,saurabh,divyansh,bajrang,sushil,yogeshwar,sakshi,vinesh,neeraj,subedar,fouaad,bhavani,aditi,jyothi,jeswin,sreeshankar,avinash,tejaswin,murali,parul,simranjit,pooja,manisha,revathi,shaili,kishore,gopi,sangita,bimol,saweety,pinki,simran,vijender,akshay,sharmila,bhawna,avani,mona,deepthi,kashish,swarup,nimisha,sivarajan,solairaj,mugunthan,rutvi,boya,manohara,charanjith,rishi,alphia,thulasimathi,bhakthi,sourabhi,rudransh,killaka,sanjana,sandip,sriharsha,sidhartha,sukant,singhraj,bhagyashri,nithya,rubina,rinku,sheetal,pushpendra,bhawanaben,tulika,kokila,kapil,pranay,sudarshan,sundar,ullas,payal,sandesh,shrishti,azbaan,adiba,jagadesh,toman,lakshay,ishank,vijaya,aanya,pramod,suryakant,sumedha,kavin,mahendra,banothu,saivardhan,tejalben,sehajveer,aaryan,bhavina,shailesh,nitesh,harvinder,ajeet,nishad,soman,abhijeet,dilip,hokato,lalitha,preeti,ruchi,shruti,sarabjit,potnuru,haris,mythili,sonal,prachi,shanthiya,adil,nazir,ramakrishna,satischandra,yogendra,mahadu,sridhar,satya,sai,deepa,vijaya,naomi,tarun,ashok,mit,kavin,pavani,swaraj,nihal,bhawanaben,ajbaji,kokila,bhakthi,vaja,thulasimathi,solairaj,azbaan,jagadesh,dhanna,lakshay,ishank,suryakant,banothu,saivardhan,sehajveer,tejalben,amraji,mangesh,rutvi,bai,shanti,vishnu,mugunthan,sudarshan'.split(','));
 
   function isName(w){return INDIAN_FIRST_NAMES.has(w.toLowerCase())||INDIAN_SURNAMES.has(w.toLowerCase())}
 
@@ -503,10 +503,18 @@ function detectNames(text){
     else if(nameParts.length===1&&isName(nameParts[0]))found.add(initials+' '+nameParts[0]);
   }}
 
+  // 2b) Short uppercase prefix without dots: "DS Vishnu", "MS Sharath" — common South Indian style
+  {const reShort=/\b([A-Z]{2,3})[ \t]+([A-Z][a-zA-Z]{2,15}(?:[ \t]+[A-Z][a-zA-Z]{2,15}){0,2})\b/g;
+  let m;while((m=reShort.exec(norm))!==null){
+    const prefix=m[1];if(BAD.has(prefix.toLowerCase()))continue;
+    const nameParts=m[2].trim().split(/\s+/).filter(ok);
+    if(nameParts.length>=1&&nameParts.some(w=>isName(w)))found.add(prefix+' '+nameParts.join(' '));
+  }}
+
   // 3) Context: "with X", "X reported", "X's knee"
   const ctx=[
     /(?:with|briefed|advised|counselled|partner|against|sparring|from|under)[ \t]+(?:Dr\.?[ \t]+)?([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})/g,
-    /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})[ \t]+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented)/g,
+    /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})[ \t]+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented|reviewed|cleared|recorded|lifted|noted)/g,
     /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})(?:'s|'s)\s/g,
   ];
   ctx.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
@@ -534,9 +542,11 @@ function detectNames(text){
   }}
 
   // 7) Known Indian first names anywhere in text (single-word detection)
+  // Skip ALL-CAPS words here — they're likely acronyms (SAI, BMI) even if they match a name
   {const reWord=/\b([A-Z][a-zA-Z]{2,15})\b/g;
   let m;while((m=reWord.exec(norm))!==null){
     const w=m[1];
+    if(w===w.toUpperCase())continue;
     if(ok(w)&&INDIAN_FIRST_NAMES.has(w.toLowerCase()))found.add(w);
   }}
 
@@ -609,12 +619,13 @@ function toStep4(){
     masked=masked.replace(new RegExp('\\b'+escaped+'\\b','gi'),D.alias[n]);
   });
   // Phase 2: Replace standalone first/last name parts (catches "Neeraj reported..." when "Neeraj Chopra" was detected)
+  // For privacy: even ambiguous parts (belonging to 2+ people) get masked using first alias — leaking is worse than a wrong alias
   const _pm={};
   D.names.forEach(n=>{n.split(/\s+/).forEach(p=>{
     if(p.length<3||/^[A-Z]\.$/.test(p))return;
     const k=p.toLowerCase();if(!_pm[k])_pm[k]={w:p,a:new Set()};_pm[k].a.add(D.alias[n]);
   })});
-  Object.values(_pm).filter(v=>v.a.size===1).sort((a,b)=>b.w.length-a.w.length).forEach(v=>{
+  Object.values(_pm).sort((a,b)=>b.w.length-a.w.length).forEach(v=>{
     const escaped=v.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     masked=masked.replace(new RegExp('\\b'+escaped+'\\b','gi'),[...v.a][0]);
   });
