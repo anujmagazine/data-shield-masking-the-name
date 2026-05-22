@@ -517,7 +517,7 @@ function detectNames(text){
     /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})[ \t]+(?:reported|mentioned|asked|said|showed|looked|won|completed|excused|advised|complained|felt|experienced|sustained|underwent|recovered|trained|performed|scored|played|bowled|batted|lifted|threw|ran|swam|missed|joined|visited|returned|presented|reviewed|cleared|recorded|lifted|noted)/g,
     /([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){1,2})(?:'s|'s)\s/g,
   ];
-  ctx.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/);if(ws.length>=2&&ws.every(ok))found.add(m[1].trim())}});
+  ctx.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=2)found.add(ws.join(' '));else if(ws.length===1&&isName(ws[0]))found.add(ws[0])}});
 
   // 4) Repeated capitalized pairs (2+ occurrences)
   {let m;const re2=/\b([A-Z][a-zA-Z]{1,15}[ \t]+[A-Z][a-zA-Z]{1,15})\b/g;
@@ -588,7 +588,8 @@ function renderS2(){
 
   let h=esc(D.txt);
   [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
-    h=h.replace(new RegExp('\\b'+esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','gi'),'<span class="nhl">'+esc(n)+'</span>');
+    const escaped=esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    h=h.replace(new RegExp(escaped,'gi'),'<span class="nhl">'+esc(n)+'</span>');
   });
   document.getElementById('htxt').innerHTML=h;
   const c=document.getElementById('chips');
@@ -602,7 +603,7 @@ document.getElementById('mname').addEventListener('keydown',e=>{if(e.key==='Ente
 
 function toStep3(){
   if(!D.names.length){msg('Add at least one name');return}
-  D.names.forEach((n,i)=>{if(!D.alias[n])D.alias[n]='Person '+String.fromCharCode(65+i)});
+  D.names.forEach((n,i)=>{if(!D.alias[n]){const idx=i+1;D.alias[n]='Person '+idx}});
   document.getElementById('arows').innerHTML=D.names.map(n=>{
     const s=n.replace(/'/g,"\\'");
     return '<div class="alr"><div class="al-orig">'+esc(n)+'</div><div class="al-arr">→</div><input class="al-in" value="'+esc(D.alias[n]||'')+'" oninput="D.alias[\''+s+'\']=this.value" placeholder="Alias..."></div>';
@@ -653,13 +654,20 @@ function triggerDL(blob,name){
 }
 
 function cpTxt(){
-  const ta=document.createElement('textarea');
-  ta.value=D.masked;ta.style.cssText='position:fixed;left:-9999px';
-  document.body.appendChild(ta);ta.focus();ta.select();
-  try{document.execCommand('copy');msg('✓ Copied — safe to paste into any AI tool')}catch(e){
-    navigator.clipboard.writeText(D.masked).then(()=>msg('✓ Copied')).catch(()=>msg('Copy failed'));
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(D.masked).then(()=>msg('✓ Copied — safe to paste into any AI tool')).catch(()=>{
+      // Fallback for older browsers
+      const ta=document.createElement('textarea');ta.value=D.masked;ta.style.cssText='position:fixed;left:-9999px';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      try{document.execCommand('copy');msg('✓ Copied — safe to paste into any AI tool')}catch(e2){msg('Copy failed — please select and copy manually')}
+      document.body.removeChild(ta);
+    });
+  }else{
+    const ta=document.createElement('textarea');ta.value=D.masked;ta.style.cssText='position:fixed;left:-9999px';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand('copy');msg('✓ Copied — safe to paste into any AI tool')}catch(e){msg('Copy failed — please select and copy manually')}
+    document.body.removeChild(ta);
   }
-  document.body.removeChild(ta);
 }
 
 function dlTxt(){
@@ -696,6 +704,7 @@ function dlPdf(){
 
     doc.setFont('helvetica','normal');
     D.names.forEach(n=>{
+      if(y>270){doc.addPage();y=20}
       doc.setTextColor(200,50,50);doc.text(n,15,y);
       doc.setTextColor(30,80,200);doc.text(D.alias[n]||'',110,y);
       y+=8;
