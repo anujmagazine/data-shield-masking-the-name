@@ -492,7 +492,16 @@ function detectNames(text){
     /(?:Dr|Mr|Mrs|Ms|Shri|Smt)\.?[ \t]+([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
     /(?:Signed|Prepared by|Reported by|Reviewed by|Assessed by|Referred by|Attended by|Supervised by)\s*:?\s*(?:Dr\.?[ \t]+)?([A-Z][a-zA-Z]+(?:[ \t]+[A-Z][a-zA-Z]+){0,2})/gi,
   ];
-  labeled.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){const ws=m[1].trim().split(/\s+/).filter(ok);if(ws.length>=1)found.add(ws.join(' '))}});
+  labeled.forEach(re=>{re.lastIndex=0;let m;while((m=re.exec(norm))!==null){
+    // Only join CONSECUTIVE ok() words — prevent "Subhash reviewed Avani" → "Subhash Avani"
+    const words=m[1].trim().split(/\s+/);
+    let run=[];
+    words.forEach(w=>{
+      if(ok(w)){run.push(w)}
+      else{if(run.length>=1)found.add(run.join(' '));run=[]}
+    });
+    if(run.length>=1)found.add(run.join(' '));
+  }});
 
   // 2) Initials: "P.V. Sindhu", "K.L. Rahul" — ONLY if name part is a known name or has 2+ words
   {const reInit=/\b([A-Z]\.(?:\s*[A-Z]\.)*)\s+([A-Z][a-zA-Z]{1,15}(?:[ \t]+[A-Z][a-zA-Z]{1,15}){0,2})/g;
