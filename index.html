@@ -550,7 +550,26 @@ function detectNames(text){
     if(ws.length>=2||(ws.length===1&&isName(ws[0])))found.add(ws.join(' '));
   }}
 
-  // 7) Known Indian first names anywhere in text (single-word detection)
+  // 7) Comma/and-separated name lists (author lists, team rosters, attendee lists)
+  // "Mark Russell, Natalie Williams and Liam P. Kilduff" → 3 names
+  {norm.split(/\n/).forEach(line=>{
+    const segments=line.split(/\s*,\s*|\s+and\s+/);
+    const nameSegs=[];
+    segments.forEach(seg=>{
+      const words=seg.trim().split(/\s+/).filter(w=>w.length>0);
+      if(words.length<1||words.length>4)return;
+      if(words.every(w=>/^[A-Z][a-zA-Z]*\.?$/.test(w)&&!BAD.has(w.replace(/\.$/,'').toLowerCase())))
+        nameSegs.push(words);
+    });
+    if(nameSegs.length>=2){
+      nameSegs.forEach(words=>{
+        const ws=words.filter(w=>ok(w)||/^[A-Z]\.$/.test(w));
+        if(ws.length>=1)found.add(ws.join(' '));
+      });
+    }
+  })}
+
+  // 8) Known Indian first names anywhere in text (single-word detection)
   // Skip ALL-CAPS words here — they're likely acronyms (SAI, BMI) even if they match a name
   {const reWord=/\b([A-Z][a-zA-Z]{2,15})\b/g;
   let m;while((m=reWord.exec(norm))!==null){
@@ -598,7 +617,7 @@ function renderS2(){
   let h=esc(D.txt);
   [...D.names].sort((a,b)=>b.length-a.length).forEach(n=>{
     const escaped=esc(n).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    h=h.replace(new RegExp(escaped,'gi'),'<span class="nhl">'+esc(n)+'</span>');
+    h=h.replace(new RegExp('\\b'+escaped+'\\b','gi'),'<span class="nhl">'+esc(n)+'</span>');
   });
   document.getElementById('htxt').innerHTML=h;
   const c=document.getElementById('chips');

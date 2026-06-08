@@ -87,6 +87,30 @@ mergeTests.forEach(t => {
   else console.log(`✓ No false merges: ${JSON.stringify(r)}`);
 });
 
+// Book index / author list tests
+console.log('\n═══ AUTHOR LIST TESTS ═══');
+const authorTests = [
+  {name:'3 authors comma+and', input:'Mark Russell, Natalie Williams and Liam P. Kilduff',
+   expect:['Mark Russell','Natalie Williams','Liam P. Kilduff']},
+  {name:'2 authors and', input:'Emma Cockburn and Phill Bell',
+   expect:['Emma Cockburn','Phill Bell']},
+  {name:'3 authors with initial', input:'John J. McMahon, Paul Comfort and Anthony Turner',
+   expect:['John J. McMahon','Paul Comfort','Anthony Turner']},
+  {name:'Full book index block', input:'Priming match-day performance: Strategies for team sports players\nMark Russell, Natalie Williams and Liam P. Kilduff\n11\nStrategies to enhance athlete recovery\nEmma Cockburn and Phill Bell\n12\nFitness testing and data analysis\nJohn J. McMahon, Paul Comfort and Anthony Turner',
+   expect:['Mark Russell','Natalie Williams','Liam P. Kilduff','Emma Cockburn','Phill Bell','John J. McMahon','Paul Comfort','Anthony Turner']},
+  {name:'No false on non-names', input:'Strength, Conditioning and Recovery protocols reviewed.',
+   reject:['Strength','Conditioning','Recovery']},
+];
+authorTests.forEach(t=>{
+  const r=detectNames(t.input);let ok=true;
+  if(t.expect){
+    const missing=t.expect.filter(e=>!r.includes(e));
+    if(missing.length){console.log(`✗ [${t.name}] MISSING: ${missing.join(', ')} | GOT: ${JSON.stringify(r)}`);ok=false;}
+  }
+  if(t.reject)(t.reject).forEach(e=>{if(r.includes(e)){console.log(`✗ [${t.name}]: false positive "${e}"`);ok=false;}});
+  if(ok) console.log(`✓ [${t.name}]: ${JSON.stringify(r)}`);
+});
+
 // Smoke tests
 console.log('\n═══ SMOKE TESTS ═══');
 const smoke=[
